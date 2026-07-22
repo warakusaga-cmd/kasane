@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#171b24"/>
+      <stop offset="1" stop-color="#0f1115"/>
+    </linearGradient>
+  </defs>
+
+  <!-- background -->
+  <rect width="1024" height="1024" rx="228" ry="228" fill="url(#bg)"/>
+
+  <!-- Kasane: two overlapping plates -->
+  <g fill="none" stroke-width="96">
+    <circle cx="404" cy="512" r="182" stroke="#4f8cff"/>
+    <circle cx="620" cy="512" r="182" stroke="#38d39f" opacity="0.78"/>
+  </g>
+</svg>
