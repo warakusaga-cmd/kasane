@@ -32,7 +32,7 @@ header{display:flex;align-items:baseline;gap:10px;margin:6px 2px 14px}
 header h1{font-size:20px;margin:0;letter-spacing:.02em}
 header .meta{color:var(--sub);font-size:13px;margin-left:auto}
 
-nav{position:fixed;left:0;right:0;bottom:0;z-index:50;display:grid;grid-template-columns:repeat(5,1fr);
+nav{position:fixed;left:0;right:0;bottom:0;z-index:50;display:grid;grid-template-columns:repeat(4,1fr);
   background:rgba(15,17,21,.93);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding-bottom:var(--safe-b)}
 nav button{padding:9px 0 8px;color:var(--sub);font-size:10px;display:flex;flex-direction:column;align-items:center;gap:3px}
 nav button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -193,9 +193,10 @@ h2.sec{font-size:13px;color:var(--sub);margin:20px 2px 9px;font-weight:600;lette
 
 /* ウォームアップ／ストレッチ */
 .wu-h{font-size:12px;color:var(--sub);font-weight:600;letter-spacing:.03em;margin:12px 0 5px}
-.wu-i{display:flex;align-items:flex-start;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line);
-  font-size:13.5px;line-height:1.5;cursor:pointer}
+.wu-i{display:flex;align-items:flex-start;gap:8px;padding:9px 2px;border-bottom:1px solid var(--line);
+  font-size:13.5px;line-height:1.5}
 .wu-i:last-child{border-bottom:0}
+.wu-i>.grow{cursor:pointer}
 .wu-c{width:21px;height:21px;flex:none;margin-top:1px;border:1px solid var(--line);border-radius:6px;
   background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent}
 .wu-i.on .wu-c{background:rgba(56,211,159,.16);border-color:var(--ok);color:var(--ok)}
@@ -225,7 +226,6 @@ h2.sec{font-size:13px;color:var(--sub);margin:20px 2px 9px;font-weight:600;lette
   <button data-tab="log"><svg viewBox="0 0 24 24"><path d="M6 4h12v16l-6-3-6 3z"/></svg>記録</button>
   <button data-tab="wt"><svg viewBox="0 0 24 24"><path d="M4 17l5-6 4 3 7-8"/><path d="M4 20h16"/></svg>体重</button>
   <button data-tab="hist"><svg viewBox="0 0 24 24"><path d="M4 19V5m0 14h16M8 16v-5m4 5V8m4 8v-3"/></svg>履歴</button>
-  <button data-tab="ex"><svg viewBox="0 0 24 24"><path d="M3 12h2m14 0h2M7 8v8m10-8v8M9 12h6"/></svg>種目</button>
   <button data-tab="set"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6l1.4 1.4m10 10l1.4 1.4m0-12.8l-1.4 1.4m-10 10l-1.4 1.4"/></svg>設定</button>
 </nav>
 
@@ -245,7 +245,7 @@ h2.sec{font-size:13px;color:var(--sub);margin:20px 2px 9px;font-weight:600;lette
 <script>
 /* ================= storage ================= */
 const K={ex:'kintore.exercises',wo:'kintore.workouts',cf:'kintore.config',wt:'kintore.weights',
-         sv:'kintore.seedVersion',tv:'kintore.timeUnitVersion'};
+         sv:'kintore.seedVersion',tv:'kintore.timeUnitVersion',wk:'kintore.walks'};
 const load=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}};
 const save=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -260,7 +260,7 @@ const SEED=[
   ['ストレートアームプルダウン','背中'],
   ['スクワット','脚'],['ゴブレットスクワット','脚'],['レッグプレス','脚'],['レッグエクステンション','脚'],
   ['レッグカール','脚'],['ランジ','脚'],['ブルガリアンスクワット','脚'],['ヒップスラスト','脚'],
-  ['カーフレイズ','脚'],['ケーブルプルスルー','脚'],['ケーブルキックバック','脚'],
+  ['カーフレイズ','脚'],['ケーブルプルスルー','脚'],['ケーブルキックバック','脚'],['ヒップアブダクション','脚'],
   ['ショルダープレス','肩'],['アーノルドプレス','肩'],['サイドレイズ','肩'],['フロントレイズ','肩'],
   ['リアレイズ','肩'],['フェイスプル','肩'],['アップライトロー','肩'],
   ['ケーブルサイドレイズ','肩'],['ケーブルリアデルトフライ','肩'],
@@ -270,7 +270,7 @@ const SEED=[
   ['ケーブルカール','腕'],['オーバーヘッドケーブルエクステンション','腕'],
   ['腹筋ローラー','腹','bw'],['クランチ','腹','bw'],['シットアップ','腹','bw'],
   ['レッグレイズ','腹','bw'],['ハンギングレッグレイズ','腹','bw'],['ロシアンツイスト','腹','bw'],
-  ['プランク','腹','time'],['サイドプランク','腹','time'],['ケーブルクランチ','腹'],
+  ['プランク','腹','time'],['サイドプランク','腹','time'],['ケーブルクランチ','腹'],['アブドミナル','腹'],
   ['ランニング','有酸素','time'],['ウォーキング','有酸素','time'],['エアロバイク','有酸素','time'],
   ['ローイングマシン','有酸素','time'],['クロストレーナー','有酸素','time'],['縄跳び','有酸素','time'],
 ];
@@ -278,7 +278,7 @@ const SEED=[
 /* SEEDを増やしたらここを上げる。既存ユーザーには不足分だけが追加されます。
    追加のみ・削除はしないので、記録が消えることはありません。
    自分で削除した種目は、次にこの番号を上げるまで復活しません */
-const SEED_V=3;
+const SEED_V=4;
 const mkEx=s=>({id:uid(),name:s[0],part:s[1],unit:s[2]||'kg'});
 
 let EX=load(K.ex,null);
@@ -307,6 +307,7 @@ if(load(K.tv,1)<TIME_V){
   save(K.tv,TIME_V);
 }
 let WT=load(K.wt,{});
+let WALK=load(K.wk,{});   // 朝ウォーキングなどの記録。日付→{min,km?,t}
 let CF=Object.assign({rest:90,unit:'kg',restBy:null,
   routine:['休み','胸・腕','休み','背中・肩','休み','脚・腹','有酸素'],
   goal:'', wrange:30, duration:60},load(K.cf,{}));
@@ -324,6 +325,7 @@ const restFor=part=>{
 };
 
 const saveEX=()=>save(K.ex,EX),saveWO=()=>save(K.wo,WO),saveCF=()=>save(K.cf,CF),saveWT=()=>save(K.wt,WT);
+const saveWALK=()=>save(K.wk,WALK);
 const exById=id=>EX.find(e=>e.id===id);
 const exByName=n=>EX.find(e=>e.name===n);
 
@@ -355,6 +357,48 @@ function lastRecord(exId,beforeDate){
   }
   return null;
 }
+/* 次回の目標を出す（漸進性過負荷）。
+   前回の一番良いセットを見て「まだ余裕がありそうなら重量アップ、そうでなければあと1回」を勧める。
+   目安レンジは 8〜12回（筋肥大）。10回以上できていたら重量を上げる合図。 */
+function suggestNext(exId,beforeDate){
+  const ex=exById(exId);if(!ex)return null;
+  const prev=lastRecord(exId,beforeDate||todayStr());
+  if(!prev||!prev.sets.length)return null;   // 初回は前例が無いので出さない
+
+  if(ex.unit==='time'){
+    const best=Math.max(...prev.sets.map(s=>+s.r||0));
+    return {r:best+15,label:`${secLabel(best+15)}（前回より15秒長く）`};
+  }
+  if(ex.unit==='bw'){
+    const best=Math.max(...prev.sets.map(s=>+s.r||0));
+    return {r:best+1,label:`${best+1}回（前回+1回）`};
+  }
+  // kg：前回の一番重いセットと、その重量での最高回数
+  let topW=0;for(const s of prev.sets)topW=Math.max(topW,+s.w||0);
+  let topR=0;for(const s of prev.sets)if((+s.w||0)===topW)topR=Math.max(topR,+s.r||0);
+  // 増やす刻み：小さい重量（ダンベル種目）は1、脚の高重量は5、その他2.5
+  const inc=topW<15?1:(ex.part==='脚'&&topW>=50?5:2.5);
+  if(topR>=10){
+    const nw=Math.round((topW+inc)*4)/4;   // 0.25刻みに丸め
+    return {w:nw,r:8,label:`${nw}${CF.unit} × 8回`,why:`前回${topR}回できたので重量アップ`};
+  }
+  if(topR>=6){
+    return {w:topW,r:topR+1,label:`${topW}${CF.unit} × ${topR+1}回`,why:`同じ重量であと1回`};
+  }
+  return {w:topW,r:topR,label:`${topW}${CF.unit} × ${topR}回`,why:'まずは同じ重量でフォーム重視'};
+}
+/* 提案を今日の空きセットに入れる */
+function applySuggest(exId){
+  const w=getWorkout(VIEW_DATE),en=w.entries.find(e=>e.exerciseId===exId);
+  const ex=exById(exId),s=suggestNext(exId);if(!en||!s)return;
+  for(const set of en.sets){
+    if(set.done)continue;
+    if(ex.unit==='kg'&&s.w!=null)set.w=String(s.w);
+    if(s.r!=null)set.r=String(s.r);
+  }
+  saveWO();render();
+}
+
 function bestSet(exId){
   const ex=exById(exId);if(!ex)return null;
   const byWeight=ex.unit==='kg';let best=null;
@@ -412,6 +456,42 @@ function weekSets(offset){
     }
   }
   return {from,to,m};
+}
+
+/* ========= 今日のおすすめ部位 =========
+   曜日の予定に縛られず、「最近やっていない＝回復済みの部位」を勧める（Fitbod的な考え方）。
+   Push/Pull/Legs 単位で、最後にやってからの経過日数が最大のものを選ぶ。
+   同点なら今週のセット数が少ない方。当日すでにやった部位は候補から外す。 */
+function lastTrainedByPart(){
+  const last={};
+  for(const w of WO){
+    for(const en of w.entries){
+      const ex=exById(en.exerciseId);
+      if(!ex||ex.part==='有酸素'||!en.sets.some(s=>s.done))continue;
+      if(!last[ex.part]||w.date>last[ex.part])last[ex.part]=w.date;
+    }
+  }
+  return last;
+}
+function recommendPart(date){
+  const today=date||todayStr();
+  const last=lastTrainedByPart();
+  const wk=weekSets(0).m;
+  const daysSince=p=>{
+    const ds=GROUPS[p].map(q=>last[q]).filter(Boolean).sort();
+    if(!ds.length)return 999;                     // 一度もやっていない＝最優先
+    return Math.round((dObj(today)-dObj(ds[ds.length-1]))/86400000);
+  };
+  const wkSets=p=>GROUPS[p].reduce((a,q)=>a+(wk[q]||0),0);
+  const scored=['Push','Pull','Legs']
+    .map(p=>({p,d:daysSince(p),s:wkSets(p)}))
+    .filter(g=>g.d>0)                             // 今日やった部位は除く
+    .sort((a,b)=>b.d-a.d||a.s-b.s);
+  const best=scored[0]||{p:'Push',d:999,s:0};
+  const reason=best.d>=999?'まだ記録がありません。ここから始めましょう'
+    :best.d>=14?`しばらく空いています（前回${best.d}日前）`
+    :`${best.d}日空いていて回復済みです`;
+  return {group:best.p,days:best.d,reason};
 }
 
 /* ========= 時間からメニューを組む =========
@@ -612,7 +692,7 @@ function showGuide(name){
   if(!g){
     h+=`<div class="card"><div class="sub">この種目の解説はまだ用意されていません。動画で確認できます。</div></div>`;
   }else{
-    h+=`<div class="figbox">${figSVG(g.fig)}<div class="sub" style="text-align:center;padding:0 0 6px;font-size:11.5px">薄い方が開始位置／濃い方がフィニッシュ</div></div>
+    h+=`<div class="figbox"><img alt="${esc(name)}" src="img/${encodeURIComponent(name)}.png" style="width:100%;max-width:280px;display:block;margin:0 auto;border-radius:10px" onerror="this.style.display='none';this.parentElement.querySelector('.figfb').style.display='block'"><div class="figfb" style="display:none">${figSVG(g.fig)}<div class="sub" style="text-align:center;padding:0 0 6px;font-size:11.5px">薄い方が開始位置／濃い方がフィニッシュ</div></div></div>
       <div class="card" style="padding:11px 13px"><span class="tag a">効く場所</span> <span style="font-size:13.5px">${esc(g.aim)}</span></div>
       <h2 class="sec">手順</h2><ol class="steps">${g.steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol>
       <h2 class="sec">コツ</h2><ul class="bullets">${g.tips.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>
@@ -724,12 +804,28 @@ function plateRun(){
 
 /* ================= router ================= */
 let TAB='log',VIEW_DATE=todayStr();
-function go(t){TAB=t;if(t==='log')VIEW_DATE=todayStr();render()}
+/* タブ移動＝一番上へ。セットの✓など画面内の操作＝スクロール位置を保つ */
+function go(t){TAB=t;if(t==='log')VIEW_DATE=todayStr();render(true)}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.tab));
-function render(){
-  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===TAB));
+function render(toTop){
+  const y=window.scrollY;
+  /* 再描画で上の要素（ウォームアップカードの畳みなど）の高さが変わっても位置がズレないよう、
+     画面内の最初のセット行を目印にして、その見た目の位置を保つ */
+  let anchor=null;
+  if(!toTop)for(const r of document.querySelectorAll('.setrow')){
+    const rect=r.getBoundingClientRect();
+    if(rect.bottom>0){anchor={ex:r.dataset.ex,i:r.dataset.i,top:rect.top};break}
+  }
+  /* 種目タブは設定の中の画面なので、ナビは設定を光らせる */
+  const navFor=TAB==='ex'?'set':TAB;
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===navFor));
   document.getElementById('app').innerHTML=({log:viewLog,wt:viewWt,hist:viewHist,ex:viewEx,set:viewSet})[TAB]();
-  window.scrollTo(0,0);
+  if(toTop){window.scrollTo(0,0);return}
+  if(anchor){
+    const el=document.querySelector(`.setrow[data-ex="${anchor.ex}"][data-i="${anchor.i}"]`);
+    if(el){window.scrollTo(0,window.scrollY+(el.getBoundingClientRect().top-anchor.top));return}
+  }
+  window.scrollTo(0,y);
 }
 
 /* ================= 記録 ================= */
@@ -749,12 +845,27 @@ function viewLog(){
   if(w&&w.finished)h+=`<div class="row" style="margin-top:9px;border-top:1px solid var(--line);padding-top:9px">
       <span class="grow" style="color:var(--ok);font-size:13.5px">✓ ${esc(w.finished)} に完了しました</span>
       <button class="howto" onclick="showSummary()">まとめ</button></div>`;
-  /* 具体的なストレッチは下のカードに出るので、ここは一言だけにする */
-  if(rest)h+=`<div class="sub" style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px">${
-    esc(REST_TIPS[REST_TIPS.length-1])}</div>`;
+  /* 休養日でも「鍛えるなら◯◯」をおすすめする（曜日の予定に縛られないため）。
+     すでに完了した日は出さない */
+  if(rest&&isToday&&!(w&&w.finished)){
+    const rec=recommendPart(date);
+    h+=`<div style="margin-top:9px;border-top:1px solid var(--line);padding-top:9px">
+      <div class="sub" style="font-size:12px">鍛えるなら今日のおすすめは</div>
+      <div class="row" style="margin-top:3px">
+        <div class="grow"><b style="font-size:16px;color:var(--accent)">${esc(partDisp(rec.group))}</b>
+          <span class="sub" style="font-size:11.5px"> ・ ${esc(rec.reason)}</span></div>
+        <button class="howto" onclick="setPart('${rec.group}')">この部位で始める</button>
+      </div>
+      <div class="sub" style="font-size:11px;margin-top:6px">休むなら ${esc(REST_TIPS[REST_TIPS.length-1])}</div>
+    </div>`;
+  }else if(rest){
+    h+=`<div class="sub" style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px">${
+      esc(REST_TIPS[REST_TIPS.length-1])}</div>`;
+  }
   h+=`</div>`;
 
   h+=wtNudge();
+  h+=walkCard(date);
   h+=wuCard(date);
 
   const hasEntries=w&&w.entries.length;
@@ -810,6 +921,14 @@ function viewLog(){
           <button class="del sub" onclick="rmEntry('${en.exerciseId}')" style="font-size:18px;color:var(--sub)">×</button>
         </div>`;
       if(prev)h+=`<div class="prev">前回 ${fmtD(prev.date)} — <b>${prev.sets.map(s=>setLabel(ex,s)).join(', ')}</b></div>`;
+      const sg=suggestNext(en.exerciseId);
+      const anyDone=en.sets.some(s=>s.done);
+      if(sg&&!anyDone)
+        h+=`<div class="row" style="margin-top:5px;gap:8px;background:rgba(56,211,159,.10);border:1px solid rgba(56,211,159,.35);border-radius:9px;padding:7px 10px">
+          <div class="grow" style="min-width:0"><span style="color:var(--ok);font-size:12px">次はこれ</span>
+            <b style="font-size:13.5px"> ${esc(sg.label)}</b>
+            ${sg.why?`<div class="sub" style="font-size:11px">${esc(sg.why)}</div>`:''}</div>
+          <button class="btn sm nw" onclick="applySuggest('${en.exerciseId}')">入れる</button></div>`;
       en.sets.forEach((s,i)=>{
         const wDis=ex.unit!=='kg';
         const phw=s.ph&&s.ph.w!==''&&s.ph.w!=null?s.ph.w:'kg';
@@ -837,7 +956,7 @@ function viewLog(){
     h+=`<div class="card"><div class="sub" style="margin-bottom:6px">メモ</div>
       <textarea rows="2" placeholder="調子・体重など" onchange="setMemo(this.value)">${esc(w.memo||'')}</textarea></div>`;
   }else if(rest){
-    h+=`<div class="empty">今日は休んで回復させる日です<br><span class="sub">やる場合は上の「変更」から部位を選べます</span></div>`;
+    h+=`<div class="empty">今日は休んで回復させる日です<br><span class="sub">やる場合は上の「この部位で始める」か「変更」から選べます</span></div>`;
   }
 
   h+=`<div style="margin-top:14px"><button class="btn" onclick="pickExercise()">＋ 種目を追加</button></div>`;
@@ -1218,6 +1337,85 @@ function wtQSave(){
   render();
 }
 
+/* ========== 朝ウォーキング ========== */
+function walkSorted(){return Object.keys(WALK).sort()
+  .map(d=>({d,min:+WALK[d].min||0,km:WALK[d].km?+WALK[d].km:null,t:WALK[d].t||null}))
+  .filter(x=>x.min>0)}
+function walkStreak(){
+  const set=new Set(walkSorted().map(x=>x.d));
+  if(!set.size)return 0;
+  const t=todayStr();
+  let cur=set.has(t)?t:dstr(new Date(Date.now()-86400000));
+  if(!set.has(cur))return 0;
+  let n=0;while(set.has(cur)){n++;cur=dstr(new Date(dObj(cur).getTime()-86400000))}
+  return n;
+}
+function walkWeekMin(){
+  const b=new Date();b.setHours(0,0,0,0);b.setDate(b.getDate()-b.getDay());
+  const from=dstr(b);let m=0;
+  for(const x of walkSorted())if(x.d>=from)m+=x.min;
+  return m;
+}
+/* 記録タブのカード。今日ぶんの入力＋今週合計＋連続日数＋直近の記録 */
+function walkCard(date){
+  if(date!==todayStr())return '';   // 今日を見ているときだけ
+  const cur=WALK[todayStr()],all=walkSorted();
+  const st=walkStreak(),wk=walkWeekMin();
+  const last=all.slice(-1)[0];
+  const ph=cur?cur.min:(last?last.min:'');
+  let h=`<div class="card"${cur?'':' style="border:1px solid var(--accent)"'}>
+    <div class="row" style="margin-bottom:9px">
+      <div class="grow"><b>🚶 朝ウォーキング</b>
+        <div class="sub" style="font-size:11.5px;margin-top:2px">${
+          cur?`今日 ${cur.min}分${cur.km?' / '+cur.km+'km':''}${cur.t?'（'+cur.t+'）':''} 記録済み`
+            :st?`${st}日連続。今日で${st+1}日目です`:'今日の歩いた時間を記録できます'}</div>
+      </div>
+      ${(st||wk)?`<div style="text-align:right"><div class="sub" style="font-size:11px">今週</div>
+        <b style="font-variant-numeric:tabular-nums">${wk}<span class="sub" style="font-size:11px">分</span></b></div>`:''}
+    </div>
+    <div class="row" style="gap:8px">
+      <button class="howto" onclick="walkStep(-5)">−5</button>
+      <input id="walkMin" class="grow" type="text" inputmode="numeric" enterkeyhint="done"
+        style="text-align:center" placeholder="${ph||'分'}" value="${cur?cur.min:''}" oninput="walkClean(this)">
+      <span class="sub">分</span>
+      <button class="howto" onclick="walkStep(5)">＋5</button>
+      <button class="btn" style="width:auto;padding:11px 15px" onclick="walkSave()">${cur?'更新':'記録'}</button>
+    </div>
+    <div class="row" style="gap:8px;margin-top:8px">
+      <input id="walkKm" type="text" inputmode="decimal" enterkeyhint="done" class="grow"
+        placeholder="距離 km（任意）" value="${cur&&cur.km?cur.km:''}" oninput="walkCleanKm(this)">
+    </div>`;
+  if(all.length){
+    h+=`<div class="sub" style="font-size:11px;margin:11px 0 3px">最近の記録</div>`;
+    for(const x of all.slice().reverse().slice(0,5)){
+      h+=`<div class="row" style="padding:6px 0;border-top:1px solid var(--line);font-size:13px">
+        <span class="grow">${fmtD(x.d)}${x.t?` <span class="sub">${x.t}</span>`:''}</span>
+        <span style="font-variant-numeric:tabular-nums">${x.min}分${x.km?` / ${x.km}km`:''}</span>
+        <button class="del sub" onclick="walkDel('${x.d}')" style="font-size:16px;margin-left:8px">×</button></div>`;
+    }
+  }
+  return h+`</div>`;
+}
+function walkClean(el){let v=el.value.replace(/[^\d]/g,'');if(v!==el.value)el.value=v}
+function walkCleanKm(el){let v=el.value.replace(/[^\d.]/g,'');const p=v.split('.');
+  if(p.length>2)v=p[0]+'.'+p.slice(1).join('');if(v!==el.value)el.value=v}
+function walkStep(d){const el=document.getElementById('walkMin');
+  el.value=Math.max(0,(+el.value||+el.placeholder||20)+d)}
+function walkSave(){
+  const min=+document.getElementById('walkMin').value;
+  if(!min||min<=0||min>600){alert('歩いた時間（分）を入れてください');return}
+  const km=document.getElementById('walkKm').value.trim();
+  const prev=WALK[todayStr()];
+  WALK[todayStr()]={min,t:(prev&&prev.t)||nowHM()};
+  if(km&&+km>0)WALK[todayStr()].km=+km;
+  saveWALK();
+  const st=walkStreak();
+  toast(st>1?`ウォーキングを記録しました 🎉 ${st}日連続`:'ウォーキングを記録しました');
+  render();
+}
+function walkDel(d){if(!confirm(fmtD(d)+' のウォーキングを削除しますか？'))return;
+  delete WALK[d];saveWALK();render()}
+
 function wtStep(d){
   const el=document.getElementById('wtin');
   const v=(+el.value||wtSorted().slice(-1)[0]?.w||60)+d;
@@ -1356,11 +1554,13 @@ function viewHist(){
   }
   return h+`</div>`;
 }
-function openDay(d){VIEW_DATE=d;TAB='log';render()}
+function openDay(d){VIEW_DATE=d;TAB='log';render(true)}
 
 /* ================= 種目 ================= */
 function viewEx(){
-  let h=`<header><h1>種目</h1><div class="meta">${EX.length}件</div></header>`;
+  let h=`<header><button class="howto" onclick="go('set')" style="margin-right:4px">‹ 設定</button>
+    <h1 style="font-size:19px">種目</h1><div class="meta">${EX.length}件</div></header>`;
+  h+=`<div class="sub" style="margin:-6px 2px 12px;font-size:12px">タップで記録と伸びを表示。× で削除、下から追加できます。</div>`;
   for(const p of PARTS){
     const list=EX.filter(e=>e.part===p);if(!list.length)continue;
     h+=`<h2 class="sec">${esc(p)}</h2><div class="card">`;
@@ -1404,6 +1604,9 @@ function viewSet(){
   const W=['日','月','火','水','木','金','土'],today=new Date().getDay();
   return `<header><h1>設定</h1></header>
   <div class="card"><button class="btn ghost" onclick="showHelp()">使い方と用語を見る</button></div>
+  <div class="card"><button class="btn ghost" onclick="go('ex')">
+    <span class="row" style="justify-content:center;gap:6px">種目の管理（${EX.length}件）<span class="sub" style="font-size:15px">›</span></span></button>
+    <div class="sub" style="margin-top:8px;font-size:11.5px">種目の追加・削除、種目ごとの記録と推定1RMの確認</div></div>
   <h2 class="sec">曜日ごとの部位</h2>
   <div class="card">
     ${CF.routine.map((v,i)=>`<div class="row" style="margin-bottom:7px">
@@ -1488,7 +1691,7 @@ function applyPreset(k){
   CF.routine=PRESETS[k].slice();saveCF();render();
 }
 function exportJSON(){
-  const blob=new Blob([JSON.stringify({v:2,exercises:EX,workouts:WO,weights:WT,config:CF},null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({v:2,exercises:EX,workouts:WO,weights:WT,walks:WALK,config:CF},null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`kasane-${todayStr()}.json`;a.click();
 }
 function importJSON(inp){
@@ -1498,15 +1701,16 @@ function importJSON(inp){
     const d=JSON.parse(r.result);
     if(!d.workouts||!d.exercises)throw 0;
     if(!confirm('現在のデータを上書きします。よろしいですか？'))return;
-    EX=d.exercises;WO=d.workouts;WT=d.weights||{};CF=Object.assign(CF,d.config||{});
-    saveEX();saveWO();saveWT();saveCF();render();alert('読み込みました');
+    EX=d.exercises;WO=d.workouts;WT=d.weights||{};WALK=d.walks||{};CF=Object.assign(CF,d.config||{});
+    saveEX();saveWO();saveWT();saveWALK();saveCF();render();alert('読み込みました');
   }catch(e){alert('ファイルを読めませんでした')}};
   r.readAsText(f);inp.value='';
 }
 function wipe(){
-  if(!confirm('すべての記録（トレーニング・体重）を削除します。元に戻せません。'))return;
+  if(!confirm('すべての記録（トレーニング・体重・ウォーキング）を削除します。元に戻せません。'))return;
   if(!confirm('本当によろしいですか？'))return;
-  localStorage.removeItem(K.wo);localStorage.removeItem(K.wt);WO=[];WT={};render();
+  localStorage.removeItem(K.wo);localStorage.removeItem(K.wt);localStorage.removeItem(K.wk);
+  WO=[];WT={};WALK={};render();
 }
 
 /* ================= 初回セットアップ =================
@@ -1516,12 +1720,12 @@ function wipe(){
 const SETUP={step:0,freq:3,style:'ppl',dur:60};
 /* 週の回数 × 分け方 → 使うプリセット */
 const SETUP_PRESET={
-  '2:ppl':'週2回（上半身/下半身）', '2:part':'週2回（上半身/下半身）',
-  '3:ppl':'PPL 週3回',             '3:part':'週3回（王道の3分割）',
-  '4:ppl':'PPL 週4回＋有酸素',      '4:part':'週4回＋有酸素',
-  '6:ppl':'PPL 週6回（本格）',      '6:part':'週5回（部位別）',
-  /* 週末だけ。PPLは3日必要なので金曜から、部位分けなら土日に全身2回 */
-  'we:ppl':'週末だけ（金土日）',    'we:part':'週末だけ（土日）'
+  '2:ppl':'週2回（上半身/下半身）', '2:part':'週2回（上半身/下半身）', '2:ul':'おまかせ 週2回（上下2分割）',
+  '3:ppl':'PPL 週3回',             '3:part':'週3回（王道の3分割）',   '3:ul':'おまかせ 週3回（上下＋全身）',
+  '4:ppl':'PPL 週4回＋有酸素',      '4:part':'週4回＋有酸素',          '4:ul':'おまかせ 週4回（上下2分割）',
+  '6:ppl':'PPL 週6回（本格）',      '6:part':'週5回（部位別）',        '6:ul':'おまかせ 週6回（上下2分割）',
+  /* 週末だけ。PPLは3日必要なので金曜から、部位分けなら土日に全身2回、おまかせは上半身/下半身 */
+  'we:ppl':'週末だけ（金土日）',    'we:part':'週末だけ（土日）',      'we:ul':'おまかせ 週末（上下2分割）'
 };
 function startSetup(){SETUP.step=0;document.getElementById('welcome').classList.add('on');drawSetup()}
 function setupGo(n){SETUP.step=n;drawSetup()}
@@ -1575,15 +1779,14 @@ function drawSetup(){
     <div class="wfoot"><button class="btn" onclick="setupGo(2)">次へ</button>
       <button class="skip" onclick="setupGo(0)">戻る</button></div>`;
   }else if(s.step===2){
-    const cmp=s.freq===2
-      ?'<div class="lead">週2回は上半身／下半身に分ける形で固定になります</div>'
-      :s.freq==='we'
-      ?'<div class="lead">週末だけなら<b>「部位で分ける」＝土日に全身を2回</b>がおすすめです。週2回しか行けないときは、分割するより全身をやったほうが1部位あたりの頻度が保てます。<br>「動作で分ける」を選ぶと金土日の3日になります</div>'
-      :'<div class="lead">迷ったら上の「動作で分ける」で大丈夫です</div>';
+    const cmp=s.freq==='we'
+      ?'<div class="lead">週末だけなら、迷ったら<b>「おまかせ」</b>でOK。考えずに出てきたメニューをやるだけです</div>'
+      :'<div class="lead">迷ったら一番上の<b>「おまかせ」</b>で大丈夫です</div>';
     h=`${dots(2)}<div class="body">
-      <h2>体の分け方はどちらにしますか？</h2>
+      <h2>体の分け方を選んでください</h2>
       ${cmp}
-      ${opt(s.style==='ppl','動作で分ける（PPL）','押す日・引く日・脚の日の3種類。同じ筋肉を続けて使わないので回復させやすく、初心者にもおすすめ',"setupPick('style','ppl')")}
+      ${opt(s.style==='ul','おまかせ（上半身／下半身）','考えなくてOK。上半身の日と下半身の日に分けて、2日で全身を1周します。出てきたメニューをやるだけ',"setupPick('style','ul')")}
+      ${opt(s.style==='ppl','動作で分ける（PPL）','押す日・引く日・脚の日の3種類。同じ筋肉を続けて使わないので回復させやすい',"setupPick('style','ppl')")}
       ${opt(s.style==='part','部位で分ける','胸の日・背中の日…と部位ごとに分ける昔ながらの方法。狙った部位を集中的にやれます',"setupPick('style','part')")}
       <div class="card" style="margin-top:14px">
         <div class="sub" style="font-size:12px;margin-bottom:6px">この設定だとこうなります</div>
@@ -1655,6 +1858,111 @@ const REST_STRETCH=['前ももを伸ばす 30秒×左右（デスクワークで
                     'あぐらで前傾、お尻を伸ばす 30秒×左右',
                     '軽いウォーキング 20〜30分'];
 
+/* ストレッチ／ウォームアップ動作のやり方。
+   項目の文字列に match のどれかが含まれていれば、その解説を出す。
+   種目と違って器具を使わないので、図解ではなく手順＋ポイント＋動画リンクで説明する。 */
+const MOVE_GUIDE=[
+  {n:'腕回し',match:['腕を大きく前回し'],icon:'🔄',
+   how:['足を肩幅に開いて立つ','肩を軸に、腕を大きく前に10回ぐるぐる回す','次に後ろに10回。だんだん大きく'],
+   tip:'肩を温めて可動域を広げるのが目的。痛みが出ない範囲で大きく回します'},
+  {n:'肩甲骨を寄せる',match:['肩甲骨を寄せて'],icon:'🎯',
+   how:['腕を軽く曲げて胸の高さに上げる','左右の肩甲骨を背中の中央で寄せる','同時に肩を下に下げる。1秒キープして戻す'],
+   tip:'「肩をすくめない」で寄せるのがコツ。猫背が伸びて胸の種目が効きやすくなります'},
+  {n:'胸を開くストレッチ',match:['胸を開く','胸を張る'],icon:'🙆',
+   how:['壁や柱の横に立ち、片手を肩の高さで壁につく','手はそのままで、体を反対側にゆっくりひねる','胸の前が伸びるところで止める。左右'],
+   tip:'ベンチプレスなど押す種目の前後に。強く引っぱらず、伸びを感じる程度で'},
+  {n:'膝つき腕立て',match:['膝つき腕立て'],icon:'💪',
+   how:['四つ這いから膝をついたまま手を肩幅より広くつく','頭から膝まで一直線をキープ','胸を床に近づけて、押し戻す。10回'],
+   tip:'本番前に胸と腕に軽く血を通す用。楽な回数でOKです'},
+  {n:'肩をすくめて下ろす',match:['肩をすくめて'],icon:'🤷',
+   how:['力を抜いて立つ','両肩を耳に近づけるように上げる','ストンと一気に力を抜いて下ろす。10回'],
+   tip:'僧帽筋の緊張を抜いて、引く動作に入りやすくします'},
+  {n:'ぶら下がり',match:['ぶら下が'],icon:'🧗',
+   how:['懸垂バーを肩幅で握る','足を離してただ脱力してぶら下がる','肩まわりが伸びるのを感じて20秒'],
+   tip:'背中と肩を伸ばして、懸垂やラットプルの可動域を出します。握力がきつければ短くても可'},
+  {n:'背中を丸める・開く',match:['背中を丸める','キャット'],icon:'🐈',
+   how:['四つ這い、または腕を前で組んで立つ','背中を天井に向けて大きく丸める（猫）','次に胸を張って背中を反らす。10回ゆっくり'],
+   tip:'背骨を1つずつ動かすイメージ。呼吸を止めないこと'},
+  {n:'自重スクワット',match:['自重スクワット'],icon:'🏋️',
+   how:['足を肩幅、つま先やや外向き','お尻を後ろに引いてしゃがむ','踵で床を押して立つ。15回'],
+   tip:'バーを担ぐ前のリハーサル。深さとフォームを確認する用なので軽く'},
+  {n:'ヒップヒンジ',match:['ヒップヒンジ','お尻を後ろに引く'],icon:'🦵',
+   how:['足を肩幅、手を股関節に当てる','膝を軽く曲げ、お尻を後ろに突き出す','背中はまっすぐのまま上体を前傾→戻す。10回'],
+   tip:'デッドリフトの基本動作。腰を丸めず「股関節から折る」感覚をつかみます'},
+  {n:'その場ランジ',match:['ランジ'],icon:'🚶',
+   how:['足を前後に開いて立つ','前の膝を90度まで曲げてしゃがむ','前脚で押して戻る。左右5回ずつ'],
+   tip:'脚全体を温めてバランスも整えます。ぐらつく人は壁に手を添えて'},
+  {n:'足首回し',match:['足首回し','足首と股関節','足首を回'],icon:'🦶',
+   how:['片足を軽く浮かせる','足首をぐるぐる大きく回す。各方向10回','反対も同様'],
+   tip:'スクワットでしゃがみやすくなります。股関節も回すとなお良い'},
+  {n:'軽いサイドレイズ',match:['軽いダンベルでサイドレイズ'],icon:'🏋️',
+   how:['一番軽いダンベル（なければ水のペットボトル）を持つ','肘を軽く曲げて真横に肩の高さまで上げる','ゆっくり下ろす。15回'],
+   tip:'肩を温める用。本番の重量ではなく、動きの確認だけ'},
+  {n:'肘の曲げ伸ばし',match:['肘の曲げ伸ばし'],icon:'💪',
+   how:['腕を体の横に下ろす','肘を大きく曲げて、まっすぐ伸ばす','20回リズムよく'],
+   tip:'肘関節を温めて、腕の種目の準備をします'},
+  {n:'手首回し',match:['手首回し'],icon:'🤚',
+   how:['両手を軽く握る','手首をぐるぐる回す。各方向10回'],
+   tip:'バーを握る種目やプレス系の前に。手首の痛み予防にも'},
+  {n:'体幹をひねる',match:['体幹をひねる'],icon:'🔃',
+   how:['足を肩幅に開いて立つ','腕を軽く上げて、上体を左右にひねる','左右10回ずつ、反動をつけすぎない'],
+   tip:'腹まわりを温めます。腰から下は正面のまま、上だけひねると効果的'},
+  {n:'体を温める',match:['体を温める','歩く〜軽いジョグ'],icon:'🔥',
+   how:['エアロバイク・トレッドミル早歩き・その場足踏みなど、何でもOK','うっすら汗ばんで、息が少し上がるまで','3〜5分'],
+   tip:'冷えた筋肉でいきなり重いものを持つと怪我のもと。まず全身に血を通します'},
+  {n:'軽い重量で慣らす',match:['1種目めを軽い重量'],icon:'🏋️',
+   how:['その日の1種目めを、本番より軽い重量で','例：本番60kg → バーのみ20kg×10 → 40kg×5 → 50kg×3','ここまでは記録しません。本番はこのあと'],
+   tip:'これが一番大事なウォームアップです。神経系を目覚めさせて本番の重量を安全に扱えます'},
+
+  {n:'前ももストレッチ',match:['前ももを伸ばす','立って足首を持ち'],icon:'🧍',
+   how:['壁に片手をついて立つ','反対の手で足の甲をつかみ、踵をお尻に近づける','膝を後ろに引くと前ももが伸びる。30秒×左右'],
+   tip:'デスクワークで縮みやすい部分。膝が前に出ないように'},
+  {n:'裏ももストレッチ',match:['裏ももを伸ばす','前屈'],icon:'🙇',
+   how:['脚を伸ばして座る（または立って前屈）','背中はまっすぐのまま、股関節から前に倒す','裏ももが伸びるところで30秒キープ'],
+   tip:'背中を丸めず「お腹を太ももに近づける」意識で。反動はつけない'},
+  {n:'お尻ストレッチ',match:['お尻を伸ばす','あぐらで前傾','あぐらで前に倒れる'],icon:'🧘',
+   how:['あぐら、または片脚を反対の膝に乗せて座る','背中を伸ばしたまま上体を前に倒す','お尻の奥が伸びるところで30秒'],
+   tip:'スクワットやデッドリフトのあとに。左右差があれば固い方を長めに'},
+  {n:'肩ストレッチ',match:['肩を伸ばす','腕を体の前で抱えて'],icon:'🤗',
+   how:['片腕を体の前でまっすぐ横に伸ばす','反対の手で肘を抱え、胸に引き寄せる','肩の後ろが伸びるところで30秒×左右'],
+   tip:'肩の種目のあとに。痛みが出る手前で止めます'},
+  {n:'三頭ストレッチ',match:['三頭を伸ばす','肘を頭の後ろ'],icon:'🙋',
+   how:['片腕を上げて肘を曲げ、手を背中に垂らす','反対の手で肘を頭の後ろに軽く押す','二の腕の裏が伸びるところで30秒×左右'],
+   tip:'腕・胸・肩の種目のあとに。押しすぎず、じんわり伸ばす'},
+  {n:'二頭ストレッチ',match:['二頭を伸ばす','腕を後ろに伸ばして'],icon:'🙆',
+   how:['壁を背にして立ち、片手を後ろの壁につく（親指下向き）','手はそのままで体を前に出す','力こぶの側が伸びるところで30秒×左右'],
+   tip:'腕・背中の種目のあとに。肩の前も一緒に伸びます'},
+  {n:'コブラ（腹を伸ばす）',match:['コブラ','上体を反らす'],icon:'🐍',
+   how:['うつ伏せになり、手を胸の横につく','腰から下は床につけたまま、上体だけ起こす','お腹の前が伸びるところで30秒'],
+   tip:'腹筋のあとに。腰が痛ければ肘つきで浅く'},
+  {n:'ふくらはぎストレッチ',match:['ふくらはぎを伸ばす'],icon:'🦵',
+   how:['壁に両手をつき、片脚を大きく後ろに引く','後ろ脚の踵を床につけたまま、体を前に','ふくらはぎが伸びるところで30秒×左右'],
+   tip:'走ったあとや脚の日に。後ろ脚の膝は伸ばしたまま'},
+  {n:'背中ストレッチ',match:['背中を伸ばす','バーや柱をつかんで'],icon:'🙇',
+   how:['バーや柱を両手でつかむ','お尻を後ろに引いて、腕と背中を伸ばす','背中の広がりを感じて30秒'],
+   tip:'背中の種目のあとに。膝を軽く曲げるとやりやすい'},
+  {n:'ウォーキング',match:['ウォーキング','軽いジョグ'],icon:'🚶',
+   how:['少し早めのペースで20〜30分','会話ができる速さを保つ'],
+   tip:'休養日の血流促進と、うっすら脂肪燃焼。無理のない範囲で'},
+];
+function moveGuide(text){
+  for(const g of MOVE_GUIDE)if(g.match.some(m=>text.indexOf(m)>=0))return g;
+  return null;
+}
+function showMove(text){
+  const g=moveGuide(text),name=g?g.n:text;
+  const yt=`https://www.youtube.com/results?search_query=${encodeURIComponent((g?g.n:text)+' ストレッチ やり方')}`;
+  let h=`<h3>${g?g.icon+' ':''}${esc(name)}</h3>`;
+  if(g){
+    h+=`<h2 class="sec">やり方</h2><ol class="steps">${g.how.map(s=>`<li>${esc(s)}</li>`).join('')}</ol>
+      <div class="card" style="padding:11px 13px"><span class="tag a">ポイント</span> <span style="font-size:13.5px">${esc(g.tip)}</span></div>`;
+  }else{
+    h+=`<div class="card"><div class="sub">この動作の解説はまだ用意されていません。動画で確認できます。</div></div>`;
+  }
+  h+=`<div style="margin-top:16px"><a class="btn" style="display:block;text-decoration:none" href="${yt}" target="_blank" rel="noopener">▶ 動画で見る</a></div>`;
+  Sheet.open(h);
+}
+
 /* その日のウォームアップ／ストレッチ一覧をつくる */
 function wuPlan(date){
   const parts=partsOf(date);
@@ -1692,9 +2000,13 @@ function wuCard(date){
   const n=all.filter(x=>done.includes(x.id)).length;
   const item=(x,sub)=>{
     const on=done.includes(x.id);
-    return `<div class="wu-i${on?' on':''}" onclick="wuToggle('${x.id}')">
-      <div class="wu-c">${on?'✓':''}</div>
-      <div class="grow"><div>${esc(x.t)}</div>${x.d?`<div class="sub" style="font-size:11.5px">${esc(x.d)}</div>`:''}</div>
+    const hasGuide=!!moveGuide(x.t);
+    return `<div class="wu-i${on?' on':''}">
+      <div class="grow" style="display:flex;align-items:flex-start;gap:10px" onclick="wuToggle('${x.id}')">
+        <div class="wu-c">${on?'✓':''}</div>
+        <div class="grow"><div>${esc(x.t)}</div>${x.d?`<div class="sub" style="font-size:11.5px">${esc(x.d)}</div>`:''}</div>
+      </div>
+      ${hasGuide?`<button class="howto" style="flex:none" onclick="showMove('${esc(x.t).replace(/'/g,"\\'")}')">やり方</button>`:''}
     </div>`;
   };
   let h=`<div class="card">
@@ -1765,7 +2077,7 @@ function showHelp(){
 /* ================= 更新 =================
    ホーム画面から開くとSafariの再読み込みボタンが無いので、設定タブから明示的に更新できるようにする。
    キャッシュを消して読み直すだけなので、localStorageの記録には触れません */
-const APP_V='v2.3';
+const APP_V='v3.0';
 let UPDATE_READY=false;
 
 async function updateApp(){
