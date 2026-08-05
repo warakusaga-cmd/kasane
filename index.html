@@ -158,6 +158,21 @@ h2.sec{font-size:13px;color:var(--sub);margin:20px 2px 9px;font-weight:600;lette
 .wchart text{fill:var(--sub);font-size:9px}
 .wchart .area{fill:url(#wg)}
 
+/* 設定の折りたたみ */
+.acc{margin-bottom:9px}
+.acc-h{display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 13px}
+.acc.on .acc-h{border-color:var(--accent)}
+.acc-t{font-weight:600;font-size:14.5px;white-space:nowrap}
+.acc-s{color:var(--sub);font-size:11.5px;margin-left:auto;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+.acc-x{color:var(--sub);font-size:16px;line-height:1;flex:none;transition:transform .18s}
+.acc.on .acc-x{transform:rotate(90deg);color:var(--accent)}
+.acc-b{display:none;padding-top:9px}
+.acc.on .acc-b{display:block}
+@media (prefers-reduced-motion:reduce){.acc-x{transition:none}}
+header button.meta{font-size:12.5px;padding:2px 0}
+
 /* 食事（カロリーとPFC） */
 .kbar{position:relative;height:11px;background:var(--card2);border-radius:6px;overflow:hidden;margin:12px 0 5px}
 .kbar .bar{position:absolute;top:0;bottom:0;left:0;background:var(--accent);border-radius:6px}
@@ -2175,14 +2190,45 @@ function delEx(id){
 }
 
 /* ================= 設定 ================= */
+/* ================= 設定 =================
+   項目が増えて縦に長くなったので、見出しごとに折りたたむ。
+   閉じているときも、見出しの右に今の設定値を出して、開かなくても分かるようにしている。
+   開閉の状態は保存されるので、よく触る項目は開いたままにしておけます */
+const setIsOpen=k=>!!(CF.setOpen&&CF.setOpen[k]);
+function setToggle(k){
+  if(!CF.setOpen)CF.setOpen={};
+  CF.setOpen[k]=!CF.setOpen[k];
+  saveCF();render();   // スクロール位置は保たれます
+}
+function setAllFold(open){
+  CF.setOpen={};
+  if(open)for(const k of SET_SECTIONS)CF.setOpen[k]=true;
+  saveCF();render(true);
+}
+const SET_SECTIONS=['routine','duration','rest','train','meal','data','update'];
+function acc(k,title,summary,body){
+  const on=setIsOpen(k);
+  return `<div class="acc${on?' on':''}">
+    <button class="acc-h" onclick="setToggle('${k}')" aria-expanded="${on}">
+      <span class="acc-t">${title}</span>
+      <span class="acc-s">${summary||''}</span>
+      <span class="acc-x">›</span></button>
+    <div class="acc-b">${body}</div></div>`;
+}
 function viewSet(){
   const W=['日','月','火','水','木','金','土'],today=new Date().getDay();
-  return `<header><h1>設定</h1></header>
+  const openN=SET_SECTIONS.filter(setIsOpen).length;
+  const presetName=Object.keys(PRESETS).find(k=>PRESETS[k].join()===CF.routine.join());
+  const trainDays=CF.routine.filter(v=>v!=='休み').length;
+  return `<header><h1>設定</h1>
+    <button class="meta" onclick="setAllFold(${openN?'false':'true'})"
+      style="color:var(--sub)">${openN?'すべて閉じる':'すべて開く'}</button></header>
   <div class="card"><button class="btn ghost" onclick="showHelp()">使い方と用語を見る</button></div>
   <div class="card"><button class="btn ghost" onclick="go('ex')">
     <span class="row" style="justify-content:center;gap:6px">種目の管理（${EX.length}件）<span class="sub" style="font-size:15px">›</span></span></button>
     <div class="sub" style="margin-top:8px;font-size:11.5px">種目の追加・削除、種目ごとの記録と推定1RMの確認</div></div>
-  <h2 class="sec">曜日ごとの部位</h2>
+
+  ${acc('routine','曜日ごとの部位',`${presetName?esc(presetName):'自分で設定'}・週${trainDays}日`,`
   <div class="card">
     ${CF.routine.map((v,i)=>`<div class="row" style="margin-bottom:7px">
       <span style="width:44px;color:${i===today?'var(--accent)':'var(--fg)'};font-weight:${i===today?'700':'400'}">${W[i]}曜</span>
@@ -2200,16 +2246,18 @@ function viewSet(){
       <b>PPL</b>＝Push（押す：胸・肩・三頭）／Pull（引く：背中・二頭）／Legs（脚・腹）で分ける方法。
       同じ筋肉を続けて使わないので回復させやすく、週3回でも週6回でも組めます。</div>
   </div>
+`)}
 
-  <h2 class="sec">1回あたりの時間</h2>
+  ${acc('duration','1回あたりの時間',CF.duration>=60?CF.duration/60+'時間':CF.duration+'分',`
   <div class="card">
     <div class="seg">${[30,45,60,90,120].map(v=>
       `<button class="${CF.duration===v?'on':''}" onclick="CF.duration=${v};saveCF();render()">${v>=60?v/60+'時間':v+'分'}</button>`).join('')}</div>
     <div class="sub" style="font-size:11.5px;margin-top:8px">
       この時間に入るぶんだけ、おすすめメニューの種目とセット数が自動で調整されます。記録タブでも変えられます。</div>
   </div>
+`)}
 
-  <h2 class="sec">インターバル（部位ごと）</h2>
+  ${acc('rest','インターバル（部位ごと）',CF.restBy?'変更あり':'おすすめのまま',`
   <div class="card">
     ${PARTS.map(p=>`<div class="row" style="margin-bottom:10px"><span class="grow">${p}</span>
       <select style="width:120px" onchange="setRest('${p}',+this.value)">
@@ -2222,8 +2270,9 @@ function viewSet(){
     </div>
     <button class="btn ghost" style="margin-top:11px" onclick="resetRest()">おすすめの秒数に戻す</button>
   </div>
+`)}
 
-  <h2 class="sec">トレーニング</h2>
+  ${acc('train','トレーニング',`${CF.unit}${CF.goal?'・目標 '+CF.goal+'kg':''}`,`
   <div class="card">
     <div class="row" style="margin-bottom:10px"><span class="grow">単位</span>
       <select style="width:120px" onchange="CF.unit=this.value;saveCF();render()">
@@ -2233,8 +2282,9 @@ function viewSet(){
       <input style="width:120px;text-align:center" type="number" inputmode="decimal" step="0.1" placeholder="—"
         value="${CF.goal||''}" onchange="CF.goal=this.value;saveCF()"> <span class="sub">kg</span></div>
   </div>
+`)}
 
-  <h2 class="sec">食事（カロリーとPFC）</h2>
+  ${acc('meal','食事（カロリーとPFC）',bodyReady()?macroTarget(todayStr()).kcal+'kcal/日':'未設定',`
   <div class="card">
     <button class="btn ghost" onclick="openBody()">からだの情報と目標を設定</button>
     <div class="sub" style="margin-top:9px;font-size:11.5px">
@@ -2243,8 +2293,9 @@ function viewSet(){
         （P${m.p} / F${m.f} / C${m.c}g）です。`)(macroTarget(todayStr()))
         :'まだ計算に必要な情報が足りません。'}</div>
   </div>
+`)}
 
-  <h2 class="sec">データ</h2>
+  ${acc('data','データ','書き出し・読み込み',`
   <div class="card">
     <button class="btn ghost" onclick="exportJSON()" style="margin-bottom:9px">バックアップを書き出す</button>
     <button class="btn ghost" onclick="document.getElementById('imp').click()">バックアップを読み込む</button>
@@ -2252,8 +2303,9 @@ function viewSet(){
     <div class="sub" style="margin-top:9px;font-size:11.5px">データはこの端末のブラウザ内にのみ保存されます。機種変更前に書き出してください。</div>
   </div>
   <div class="card"><button class="btn danger" onclick="wipe()">全データを削除</button></div>
+`)}
 
-  <h2 class="sec">アプリの更新</h2>
+  ${acc('update','アプリの更新',UPDATE_READY?'<span style="color:var(--ok)">新しい版があります</span>':APP_V,`
   <div class="card">
     <button class="btn ghost" id="updBtn" onclick="updateApp()">最新版に更新</button>
     <div class="sub" id="updMsg" style="margin-top:9px;font-size:11.5px">
@@ -2261,6 +2313,7 @@ function viewSet(){
                     :'画面が古いままのときに押してください。記録は消えません。'}
     </div>
   </div>
+`)}
   <div class="sub" style="text-align:center;margin-top:18px;font-size:11.5px">Kasane ${APP_V}</div>`;
 }
 function setRest(part,sec){
@@ -2668,7 +2721,7 @@ function showHelp(){
 /* ================= 更新 =================
    ホーム画面から開くとSafariの再読み込みボタンが無いので、設定タブから明示的に更新できるようにする。
    キャッシュを消して読み直すだけなので、localStorageの記録には触れません */
-const APP_V='v3.1';
+const APP_V='v3.2';
 let UPDATE_READY=false;
 
 async function updateApp(){
