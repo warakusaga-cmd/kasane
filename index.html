@@ -1538,6 +1538,8 @@ const PLANS=[[-20,'しっかり減量'],[-15,'減量'],[-10,'ゆっくり減量'
 /* METs＝じっとしている時の何倍エネルギーを使うか。
    消費kcal ≒ METs × 体重kg × 時間h × 1.05 */
 const METS_STRENGTH=5.0;
+/* 1回のトレーニングとして現実的な上限（分）。終了を押し忘れたときの暴走よけ */
+const MAX_SESSION_MIN=240;
 const METS_CARDIO={'ランニング':9.8,'ウォーキング':3.5,'エアロバイク':7.0,
   'ローイングマシン':7.0,'クロストレーナー':5.0,'縄跳び':12.3};
 const metsWalk=(min,km)=>{
@@ -1550,7 +1552,10 @@ const metsKcal=(mets,kg,min)=>mets*kg*(min/60)*1.05;
 /* 体重タブの最新の記録を使う。体重が無いと何も計算できない */
 function bodyKg(){const a=wtSorted();return a.length?a[a.length-1].w:null}
 function bodyFat(){const a=wtSorted().filter(x=>x.f>0);return a.length?a[a.length-1].f:null}
-function bodyReady(){return !!(bodyKg()&&(bodyFat()||(+CF.height>0&&+CF.age>0)))}
+/* 「計算できる状態か」は bmrInfo() が答えを出せるかどうかそのもの。
+   ここで別々の条件を書くと、体脂肪率に極端な値（3%未満など）が入っているのに
+   準備OKと判定してしまい、目標の計算が null を返して画面が真っ白になります */
+function bodyReady(){return !!bmrInfo()}
 
 /* 基礎代謝（BMR）。体脂肪率がわかっていれば除脂肪体重から（Katch-McArdle）、
    なければ身長・体重・年齢から（Mifflin-St Jeor）。
@@ -1589,8 +1594,11 @@ function workoutBurn(date){
   let strMin=strSec/60;
   if(w.started&&w.finished){
     const real=hm2min(w.finished)-hm2min(w.started);
-    if(real>0)strMin=Math.max(0,real-out.cardioMin);
+    /* 終了ボタンは手で押すものなので、押し忘れて何時間も後に押されることがあります。
+       現実的な長さのときだけ時計を信じ、それを超えたらセット数からの見積もりに戻します */
+    if(real>0&&real<=MAX_SESSION_MIN)strMin=Math.max(0,real-out.cardioMin);
   }
+  strMin=Math.min(strMin,MAX_SESSION_MIN);
   out.strMin=Math.round(strMin);
   out.kcal=Math.round(out.kcal+metsKcal(METS_STRENGTH,kg,strMin));
   return out;
@@ -1907,7 +1915,7 @@ function mealPush(o){
   (ML[MEAL_DATE]=ML[MEAL_DATE]||[]).push({id:uid(),name:o.name,slot:MEAL_SLOT,
     kcal:o.kcal,p:o.p,f:o.f,c:o.c,t:nowHM()});
   saveML();Sheet.close();render();
-  toast(`${o.name} を記録しました（${o.kcal}kcal）`);
+  toast(`${esc(o.name)} を記録しました（${o.kcal}kcal）`);
 }
 /* よく食べるものチップ。前に記録した内容をそのまま今の時間帯に足す */
 function mealFav(i){
@@ -1953,7 +1961,7 @@ function mealSave(id){
   if(m){Object.assign(m,{name,slot:MEAL_SLOT,kcal:Math.round(kcal),p:r1(p),f:r1(f),c:r1(c)})}
   else list.push({id:uid(),name,slot:MEAL_SLOT,kcal:Math.round(kcal),p:r1(p),f:r1(f),c:r1(c),t:nowHM()});
   saveML();Sheet.close();render();
-  toast(m?'記録を直しました':`${name} を記録しました（${Math.round(kcal)}kcal）`);
+  toast(m?'記録を直しました':`${esc(name)} を記録しました（${Math.round(kcal)}kcal）`);
 }
 function mealDel(id){
   const list=mealsOf(MEAL_DATE),m=list.find(x=>x.id===id);
@@ -1971,6 +1979,13 @@ function bodyNum(k,el){
   const v=String(el.value).replace(/[^\d.]/g,'');
   if(v!==el.value)el.value=v;
   CF[k]=v;saveCF();render();
+  /* 入れた数字を計算結果に反映する。ただし入力の確定は「次の入力欄を触ったとき」にも起きるので、
+     すぐ差し替えるとその欄が消えてしまいます。どの入力欄にも居ないときだけ出し直します */
+  setTimeout(()=>{
+    const a=document.activeElement;
+    if(a&&a.tagName==='INPUT')return;
+    if(document.getElementById('sheetP'))sheetSwap(bodyHTML());
+  },0);
 }
 function bodyHTML(){
   const kg=bodyKg(),fat=bodyFat(),b=bmrInfo(),t=tdee(todayStr()),mt=macroTarget(todayStr());
@@ -2760,9 +2775,10 @@ function watchForUpdate(reg){
 function markUpdateReady(){
   if(UPDATE_READY)return;
   UPDATE_READY=true;
-  const msg=document.getElementById('updMsg');
-  if(msg)msg.innerHTML='<span style="color:var(--ok)">新しいバージョンがあります。タップして更新してください。</span>';
-  else toast('新しいバージョンがあります（設定タブ）');
+  /* 「アプリの更新」は折りたたみの中にあるので、閉じていると #updMsg があっても見えません。
+     設定タブを開いていれば見出しの右の表示を更新し、知らせは必ずトーストでも出します */
+  if(TAB==='set')render();
+  toast('新しいバージョンがあります（設定タブ）');
 }
 
 /* ================= boot ================= */
