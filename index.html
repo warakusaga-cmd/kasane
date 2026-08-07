@@ -342,7 +342,18 @@ let WT=load(K.wt,{});
 let WALK=load(K.wk,{});   // 朝ウォーキングなどの記録。日付→{min,km?,t}
 let CF=Object.assign({rest:90,unit:'kg',restBy:null,alarm:'loud',
   routine:['休み','胸・腕','休み','背中・肩','休み','脚・腹','有酸素'],
-  goal:'', wrange:30, duration:60},load(K.cf,{}));
+  goal:'', height:'', wrange:30, duration:60},load(K.cf,{}));
+
+/* 身長(cm)と体重(kg)からBMI。身長が未設定なら null（体重は常にkgで持っている） */
+function bmiOf(kg){
+  const cm=+CF.height||0;
+  if(!cm||!kg)return null;
+  return kg/((cm/100)**2);
+}
+/* 日本肥満学会の区分。数字だけだと判断できないので一言添える */
+function bmiLabel(b){
+  return b<18.5?'やせ':b<25?'標準':b<30?'肥満(1度)':b<35?'肥満(2度)':'肥満(3度以上)';
+}
 
 /* 部位ごとのインターバル。
    大きい種目ほど長く休まないと次のセットで重量が落ちます。
@@ -1582,6 +1593,11 @@ function viewWt(){
     <div style="font-size:42px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.15">
       ${latest!=null?latest.toFixed(1):'—'}<span style="font-size:17px;color:var(--sub)"> kg</span></div>
     ${diff!=null?`<div class="sub" style="color:${diff<0?'var(--ok)':diff>0?'var(--warn)':'var(--sub)'}">前回比 ${sign(diff)}kg</div>`:''}
+    ${(()=>{const b=bmiOf(latest);
+      /* 身長が入っていないとBMIは出せない。出ない理由と入れ場所をその場に書いておく */
+      if(b==null)return latest!=null&&!CF.height
+        ?`<div class="sub" style="font-size:11.5px;margin-top:6px">設定タブで身長を入れるとBMIが出ます</div>`:'';
+      return `<div class="sub" style="margin-top:6px">BMI <b style="color:var(--fg)">${b.toFixed(1)}</b>（${bmiLabel(b)}）</div>`})()}
   </div>`;
 
   h+=`<div class="row" style="gap:10px;margin-bottom:11px">
@@ -2111,11 +2127,14 @@ function viewSet(){
       ・タイマー中は画面が消えないようにしています。画面を消すと鳴りません
     </div>`);
 
-  h+=foldSec('unit','単位と目標体重',`${esc(CF.unit)}${CF.goal?`・目標${esc(CF.goal)}kg`:''}`,`
+  h+=foldSec('unit','からだと単位',`${esc(CF.unit)}${CF.height?`・${esc(CF.height)}cm`:''}${CF.goal?`・目標${esc(CF.goal)}kg`:''}`,`
     <div class="row" style="margin-bottom:10px"><span class="grow">単位</span>
       <select style="width:120px" onchange="CF.unit=this.value;saveCF();render()">
         <option value="kg" ${CF.unit==='kg'?'selected':''}>kg</option>
         <option value="lb" ${CF.unit==='lb'?'selected':''}>lb</option></select></div>
+    <div class="row" style="margin-bottom:10px"><span class="grow">身長</span>
+      <input style="width:120px;text-align:center" type="number" inputmode="decimal" step="0.1" placeholder="—"
+        value="${CF.height||''}" onchange="CF.height=this.value;saveCF();render()"> <span class="sub">cm</span></div>
     <div class="row"><span class="grow">目標体重</span>
       <input style="width:120px;text-align:center" type="number" inputmode="decimal" step="0.1" placeholder="—"
         value="${CF.goal||''}" onchange="CF.goal=this.value;saveCF()"> <span class="sub">kg</span></div>`);
@@ -2552,7 +2571,7 @@ function showHelp(){
 /* ================= 更新 =================
    ホーム画面から開くとSafariの再読み込みボタンが無いので、設定タブから明示的に更新できるようにする。
    キャッシュを消して読み直すだけなので、localStorageの記録には触れません */
-const APP_V='v3.12';
+const APP_V='v3.13';
 let UPDATE_READY=false;
 
 async function updateApp(){

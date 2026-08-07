@@ -33,6 +33,12 @@ def save_subs(subs):
     json.dump(subs, open(SUBS, 'w'), indent=1)
 
 
+def volume(d):
+    """バックアップに入っている記録の量。世代を比べて「減っていないか」を見るためだけに使う。"""
+    return (len(d.get('workouts') or []) + len(d.get('weights') or {})
+            + len(d.get('walks') or {}))
+
+
 def save_backup(data):
     """その日のファイルに上書き保存し、古い世代を間引く。戻り値は (ファイル名, 記録件数, 保存したか)。
 
@@ -47,7 +53,9 @@ def save_backup(data):
     cnt = len(data.get('workouts') or [])
     try:
         prev = json.load(open(os.path.join(BACKUPS, name)))
-        if len(prev.get('workouts') or []) > cnt:
+        # トレーニングだけでなく体重・ウォーキングも数える。
+        # 体重しか付けていない日に、空の端末で上書きされるのを防ぐため
+        if volume(prev) > volume(data):
             return name, cnt, False
     except Exception:
         pass                                          # 初回・壊れている場合はそのまま保存する
