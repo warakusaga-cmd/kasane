@@ -280,9 +280,9 @@ h2.sec{font-size:13px;color:var(--sub);margin:20px 2px 9px;font-weight:600;lette
 
 <!-- ?v= はキャッシュ対策。ブラウザは同じURLだと古いファイルを使い続けるので、
      data.js / figures.js / foods.js を直したら、下の APP_V と一緒にこの数字も上げること -->
-<script src="figures.js?v=3.12"></script>
-<script src="data.js?v=3.12"></script>
-<script src="foods.js?v=3.12"></script>
+<script src="figures.js?v=3.13"></script>
+<script src="data.js?v=3.13"></script>
+<script src="foods.js?v=3.13"></script>
 <script>
 /* ================= storage ================= */
 const K={ex:'kintore.exercises',wo:'kintore.workouts',cf:'kintore.config',wt:'kintore.weights',
@@ -3192,10 +3192,11 @@ function watchForUpdate(reg){
 function markUpdateReady(){
   if(UPDATE_READY)return;
   UPDATE_READY=true;
-  /* 「アプリの更新」は折りたたみの中にあるので、閉じていると #updMsg があっても見えません。
-     設定タブを開いていれば見出しの右の表示を更新し、知らせは必ずトーストでも出します */
-  if(TAB==='set')render();
-  toast('新しいバージョンがあります（設定タブ）');
+  /* 「アプリの更新」は畳まないので、設定タブを見ていれば #updMsg がそのまま見えます。
+     他のタブに居るときだけトーストで知らせます */
+  const msg=document.getElementById('updMsg');
+  if(msg)msg.innerHTML='<span style="color:var(--ok)">新しいバージョンがあります。タップして更新してください。</span>';
+  else toast('新しいバージョンがあります（設定タブ）');
 }
 
 /* ============ 毎朝の通知（Web Push） ============
