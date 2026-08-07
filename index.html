@@ -36,7 +36,7 @@ header{display:flex;align-items:baseline;gap:10px;margin:6px 2px 14px}
 header h1{font-size:20px;margin:0;letter-spacing:.02em}
 header .meta{color:var(--sub);font-size:13px;margin-left:auto}
 
-nav{position:fixed;left:0;right:0;bottom:0;z-index:50;display:grid;grid-template-columns:repeat(4,1fr);
+nav{position:fixed;left:0;right:0;bottom:0;z-index:50;display:grid;grid-template-columns:repeat(5,1fr);
   background:var(--navbg);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding-bottom:var(--safe-b)}
 nav button{padding:9px 0 8px;color:var(--sub);font-size:10px;display:flex;flex-direction:column;align-items:center;gap:3px}
 nav button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -182,6 +182,19 @@ h2.sec{font-size:13px;color:var(--sub);margin:20px 2px 9px;font-weight:600;lette
 .wchart text{fill:var(--sub);font-size:9px}
 .wchart .area{fill:url(#wg)}
 
+/* 食事（カロリーとPFC） */
+.kbar{position:relative;height:11px;background:var(--card2);border-radius:6px;overflow:hidden;margin:12px 0 5px}
+.kbar .bar{position:absolute;top:0;bottom:0;left:0;background:var(--accent);border-radius:6px}
+.kbar .bar.over{background:var(--warn)}
+.mac{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:9px;margin-bottom:9px}
+.mac .trk{position:relative;height:9px;background:var(--card2);border-radius:5px;overflow:hidden}
+.mac .bar{position:absolute;top:0;bottom:0;left:0;border-radius:5px}
+.mac .num{font-variant-numeric:tabular-nums;font-size:12.5px;color:var(--sub);white-space:nowrap}
+.mac .num b{color:var(--fg);font-weight:600;font-size:14px}
+.meal-i{display:flex;align-items:center;gap:9px;padding:9px 2px;border-top:1px solid var(--line)}
+.chip{background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:12.5px;white-space:nowrap}
+.chip .sub{font-size:11px;margin-left:3px}
+
 .hist{display:flex;align-items:center;gap:11px;padding:11px 2px;border-bottom:1px solid var(--line)}
 .hist:last-child{border-bottom:0}
 .hist .d{font-variant-numeric:tabular-nums;font-weight:600;width:74px;font-size:14px}
@@ -249,6 +262,7 @@ h2.sec{font-size:13px;color:var(--sub);margin:20px 2px 9px;font-weight:600;lette
 <nav>
   <button data-tab="log"><svg viewBox="0 0 24 24"><path d="M6 4h12v16l-6-3-6 3z"/></svg>記録</button>
   <button data-tab="wt"><svg viewBox="0 0 24 24"><path d="M4 17l5-6 4 3 7-8"/><path d="M4 20h16"/></svg>体重</button>
+  <button data-tab="meal"><svg viewBox="0 0 24 24"><path d="M4 12h16a8 8 0 01-16 0z"/><path d="M3 20h18"/><path d="M9.5 8c0-1.4 1.3-1.8 1.3-3.2"/><path d="M13.5 8c0-1.4 1.3-1.8 1.3-3.2"/></svg>食事</button>
   <button data-tab="hist"><svg viewBox="0 0 24 24"><path d="M4 19V5m0 14h16M8 16v-5m4 5V8m4 8v-3"/></svg>履歴</button>
   <button data-tab="set"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6l1.4 1.4m10 10l1.4 1.4m0-12.8l-1.4 1.4m-10 10l-1.4 1.4"/></svg>設定</button>
 </nav>
@@ -265,13 +279,14 @@ h2.sec{font-size:13px;color:var(--sub);margin:20px 2px 9px;font-weight:600;lette
 </div>
 
 <!-- ?v= はキャッシュ対策。ブラウザは同じURLだと古いファイルを使い続けるので、
-     data.js / figures.js を直したら、下の APP_V と一緒にこの数字も上げること -->
-<script src="figures.js?v=3.11"></script>
-<script src="data.js?v=3.11"></script>
+     data.js / figures.js / foods.js を直したら、下の APP_V と一緒にこの数字も上げること -->
+<script src="figures.js?v=3.13"></script>
+<script src="data.js?v=3.13"></script>
+<script src="foods.js?v=3.13"></script>
 <script>
 /* ================= storage ================= */
 const K={ex:'kintore.exercises',wo:'kintore.workouts',cf:'kintore.config',wt:'kintore.weights',
-         sv:'kintore.seedVersion',tv:'kintore.timeUnitVersion',wk:'kintore.walks'};
+         sv:'kintore.seedVersion',tv:'kintore.timeUnitVersion',wk:'kintore.walks',ml:'kintore.meals'};
 const load=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}};
 const save=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -340,9 +355,19 @@ if(load(K.tv,1)<TIME_V){
 }
 let WT=load(K.wt,{});
 let WALK=load(K.wk,{});   // 朝ウォーキングなどの記録。日付→{min,km?,t}
+let ML=load(K.ml,{});     // 食事の記録。日付→[{id,name,slot,kcal,p,f,c,t}]
 let CF=Object.assign({rest:90,unit:'kg',restBy:null,alarm:'loud',
   routine:['休み','胸・腕','休み','背中・肩','休み','脚・腹','有酸素'],
-  goal:'', wrange:30, duration:60},load(K.cf,{}));
+  goal:'', wrange:30, duration:60,
+  /* からだの情報（PFC計算用）。身長cm・年齢・性別。体重と体脂肪率は体重タブの記録を使う */
+  height:'', age:'', sex:'m',
+  act:1.55,        // 活動レベル（活動レベルから出すとき）
+  base:1.2,        // 生活のベース（記録から出すとき。トレーニングぶんは別に足す）
+  burnMode:'act',  // 'act'＝活動レベルから / 'rec'＝毎日の記録から
+  plan:0,          // 目標カロリーの増減%（−は減量、＋は増量）
+  pgkg:2.0,        // タンパク質 g/体重kg
+  fpct:25          // 脂質のカロリー比%
+  },load(K.cf,{}));
 
 /* 部位ごとのインターバル。
    大きい種目ほど長く休まないと次のセットで重量が落ちます。
@@ -357,7 +382,7 @@ const restFor=part=>{
 };
 
 const saveEX=()=>save(K.ex,EX),saveWO=()=>save(K.wo,WO),saveCF=()=>save(K.cf,CF),saveWT=()=>save(K.wt,WT);
-const saveWALK=()=>save(K.wk,WALK);
+const saveWALK=()=>save(K.wk,WALK),saveML=()=>save(K.ml,ML);
 const exById=id=>EX.find(e=>e.id===id);
 const exByName=n=>EX.find(e=>e.name===n);
 
@@ -968,7 +993,7 @@ function plateRun(){
 /* ================= router ================= */
 let TAB='log',VIEW_DATE=todayStr();
 /* タブ移動＝一番上へ。セットの✓など画面内の操作＝スクロール位置を保つ */
-function go(t){TAB=t;if(t==='log')VIEW_DATE=todayStr();render(true)}
+function go(t){TAB=t;if(t==='log')VIEW_DATE=todayStr();if(t==='meal')MEAL_DATE=todayStr();render(true)}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.tab));
 function render(toTop){
   const y=window.scrollY;
@@ -982,7 +1007,7 @@ function render(toTop){
   /* 種目タブは設定の中の画面なので、ナビは設定を光らせる */
   const navFor=TAB==='ex'?'set':TAB;
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===navFor));
-  document.getElementById('app').innerHTML=({log:viewLog,wt:viewWt,hist:viewHist,ex:viewEx,set:viewSet})[TAB]();
+  document.getElementById('app').innerHTML=({log:viewLog,wt:viewWt,meal:viewMeal,hist:viewHist,ex:viewEx,set:viewSet})[TAB]();
   if(toTop){window.scrollTo(0,0);return}
   if(anchor){
     const el=document.querySelector(`.setrow[data-ex="${anchor.ex}"][data-i="${anchor.i}"]`);
@@ -1914,6 +1939,568 @@ function wtChart(range){
   </svg>`;
 }
 
+/* ================= 食事（カロリーとPFC） =================
+   身長・年齢・性別と、体重タブに記録した体重（あれば体脂肪率）から
+   基礎代謝 → 1日の消費カロリー → 目標カロリー → PFCの目標量 を出す。
+   そこに食べたものを足していく。数字はすべて推定値で、
+   「合っているか」より「同じものさしで毎日見られるか」を大事にしています */
+
+const SLOTS=['朝','昼','夜','間食'];
+const r1=v=>Math.round(v*10)/10;
+
+/* 活動レベル。TDEE＝基礎代謝×この係数で、トレーニングぶんも込みの数字です */
+const ACT_LEVELS=[
+  [1.2,  'ほとんど動かない','デスクワーク中心・運動なし'],
+  [1.375,'週1〜2回','軽い運動をする日がある'],
+  [1.55, '週3〜5回','いちばん多い選択肢です'],
+  [1.725,'週6〜7回','ほぼ毎日トレーニング'],
+  [1.9,  'とても活発','力仕事＋毎日のトレーニング'],
+];
+/* 生活のベース（記録から出すとき）。ここにトレーニングは含めず、実際の記録ぶんを別に足す */
+const BASE_LEVELS=[[1.2,'デスクワーク中心'],[1.35,'よく歩く・家事が多い'],[1.5,'立ち仕事・力仕事']];
+const PLANS=[[-20,'しっかり減量'],[-15,'減量'],[-10,'ゆっくり減量'],[0,'維持'],[10,'増量'],[15,'しっかり増量']];
+
+/* METs＝じっとしている時の何倍エネルギーを使うか。
+   消費kcal ≒ METs × 体重kg × 時間h × 1.05 */
+const METS_STRENGTH=5.0;
+/* 1回のトレーニングとして現実的な上限（分）。終了を押し忘れたときの暴走よけ */
+const MAX_SESSION_MIN=240;
+const METS_CARDIO={'ランニング':9.8,'ウォーキング':3.5,'エアロバイク':7.0,
+  'ローイングマシン':7.0,'クロストレーナー':5.0,'縄跳び':12.3};
+const metsKcal=(mets,kg,min)=>mets*kg*(min/60)*1.05;
+
+/* 体重タブの最新の記録を使う。体重が無いと何も計算できない */
+function bodyKg(){const a=wtSorted();return a.length?a[a.length-1].w:null}
+function bodyFat(){const a=wtSorted().filter(x=>x.f>0);return a.length?a[a.length-1].f:null}
+/* 「計算できる状態か」は bmrInfo() が答えを出せるかどうかそのもの。
+   ここで別々の条件を書くと、体脂肪率に極端な値（3%未満など）が入っているのに
+   準備OKと判定してしまい、目標の計算が null を返して画面が真っ白になります */
+function bodyReady(){return !!bmrInfo()}
+
+/* 基礎代謝（BMR）。体脂肪率がわかっていれば除脂肪体重から（Katch-McArdle）、
+   なければ身長・体重・年齢から（Mifflin-St Jeor）。
+   筋トレしている人は筋肉が多く、身長からの式だと低めに出やすいので、
+   体脂肪率が入っていればそちらを優先します */
+function bmrInfo(){
+  const kg=bodyKg();if(!kg)return null;
+  const f=bodyFat();
+  if(f&&f>=3&&f<=60){
+    const lbm=kg*(1-f/100);
+    return{kcal:Math.round(370+21.6*lbm),how:'体脂肪率から',lbm:r1(lbm)};
+  }
+  if(!(+CF.height>0)||!(+CF.age>0))return null;
+  return{kcal:Math.round(10*kg+6.25*(+CF.height)-5*(+CF.age)+(CF.sex==='f'?-161:5)),how:'身長・体重・年齢から'};
+}
+
+/* その日のトレーニングでの消費（推定）。
+   有酸素は記録した秒数から、筋トレは「セット数×(動く時間＋インターバル)」で
+   だいたいの拘束時間を出す。開始〜終了が記録されていればそちらを優先します */
+function workoutBurn(date){
+  const out={kcal:0,strMin:0,cardioMin:0};
+  const w=WO.find(x=>x.date===date);
+  if(!hasBodyW()||!w)return out;
+  const kg=bodyWAt(date);
+  let strSec=0;
+  for(const en of w.entries){
+    const ex=exById(en.exerciseId);if(!ex)continue;
+    const done=en.sets.filter(s=>s.done);if(!done.length)continue;
+    if(ex.part==='有酸素'&&ex.unit==='time'){
+      const min=done.reduce((a,s)=>a+(+s.r||0),0)/60;
+      out.cardioMin+=min;
+      out.kcal+=metsKcal(METS_CARDIO[ex.name]||6.0,kg,min);
+    }else{
+      strSec+=done.length*(WORK_SEC+Math.max(30,restFor(ex.part)));
+    }
+  }
+  let strMin=strSec/60;
+  if(w.started&&w.finished){
+    const real=hm2min(w.finished)-hm2min(w.started);
+    /* 終了ボタンは手で押すものなので、押し忘れて何時間も後に押されることがあります。
+       現実的な長さのときだけ時計を信じ、それを超えたらセット数からの見積もりに戻します */
+    if(real>0&&real<=MAX_SESSION_MIN)strMin=Math.max(0,real-out.cardioMin);
+  }
+  strMin=Math.min(strMin,MAX_SESSION_MIN);
+  out.strMin=Math.round(strMin);
+  out.kcal=Math.round(out.kcal+metsKcal(METS_STRENGTH,kg,strMin));
+  return out;
+}
+/* ウォーキングの消費は体重タブと同じ計算（walkKcal）を使う。
+   2か所で別々に出すと、同じ日なのに違う数字が並んでしまうため */
+function walkBurn(date){
+  const x=WALK[date];
+  if(!hasBodyW()||!x||!(+x.min>0))return{kcal:0,min:0};
+  return{kcal:walkKcal(+x.min,+x.km||null,date),min:+x.min};
+}
+
+/* その日の消費カロリー（推定）。
+   'act'＝活動レベルの係数から出す（運動ぶん込みなので毎日同じ数字）
+   'rec'＝生活のベース＋その日に記録した運動 */
+function burnOf(date){
+  const b=bmrInfo();if(!b)return null;
+  const wo=workoutBurn(date),wk=walkBurn(date);
+  if(CF.burnMode==='rec'){
+    const base=Math.round(b.kcal*(+CF.base||1.2));
+    return{mode:'rec',bmr:b,base,wo,wk,total:base+wo.kcal+wk.kcal};
+  }
+  return{mode:'act',bmr:b,wo,wk,total:Math.round(b.kcal*(+CF.act||1.55))};
+}
+/* 記録モードのときの「ふだんの消費」＝直近14日の平均。
+   今日を入れると、まだ何もしていない朝に目標が下がってしまうので今日は含めない */
+function avgBurn14(){
+  const b=bmrInfo();if(!b)return null;
+  const base=b.kcal*(+CF.base||1.2);
+  let sum=0;
+  for(let i=1;i<=14;i++){
+    const d=dstr(new Date(dObj(todayStr()).getTime()-i*86400000));
+    sum+=base+workoutBurn(d).kcal+walkBurn(d).kcal;
+  }
+  return Math.round(sum/14);
+}
+/* 目標を決めるもとになる消費カロリー。
+   記録モードでは「直近14日の平均」と「その日の実績」の大きい方を使う。
+   こうすると、動いた日は食べられる量が増え、途中で目標が下がることもありません */
+function tdee(date){
+  const b=bmrInfo();if(!b)return null;
+  if(CF.burnMode!=='rec')return Math.round(b.kcal*(+CF.act||1.55));
+  const avg=avgBurn14();
+  const day=date?burnOf(date).total:0;
+  return Math.max(avg,day);
+}
+function targetKcal(date){const t=tdee(date);return t?Math.round(t*(1+(+CF.plan||0)/100)):null}
+
+/* PFCの目標量。
+   タンパク質は体重あたりのg数で決め、脂質はカロリー比で決め、残りを炭水化物にする。
+   脂質はホルモンのために下げすぎない（体重×0.6gを下限にする） */
+function macroTarget(date){
+  const kcal=targetKcal(date),kg=bodyKg();
+  if(!kcal||!kg)return null;
+  const p=Math.round(kg*(+CF.pgkg||2));
+  const fmin=Math.round(kg*0.6);
+  const f=Math.max(fmin,Math.round(kcal*((+CF.fpct||25)/100)/9));
+  let c=Math.round((kcal-p*4-f*9)/4),tight=false;
+  if(c<0){c=0;tight=true}
+  return{kcal,p,f,c,tight,fmin};
+}
+
+const mealsOf=date=>ML[date]||[];
+function dayTotal(date){
+  const t={kcal:0,p:0,f:0,c:0};
+  for(const m of mealsOf(date)){t.kcal+=+m.kcal||0;t.p+=+m.p||0;t.f+=+m.f||0;t.c+=+m.c||0}
+  return{kcal:Math.round(t.kcal),p:Math.round(t.p),f:Math.round(t.f),c:Math.round(t.c)};
+}
+/* 最近よく食べているもの（直近60日）。内容は最後に記録したものを使う */
+function favFoods(n){
+  const from=dstr(new Date(Date.now()-60*86400000)),cnt={};
+  for(const d of Object.keys(ML)){
+    if(d<from)continue;
+    for(const m of ML[d]){
+      const c=cnt[m.name]||(cnt[m.name]={n:0,d:'',m});
+      c.n++;if(d>=c.d){c.d=d;c.m=m}
+    }
+  }
+  return Object.values(cnt).sort((a,b)=>b.n-a.n||(a.d<b.d?1:-1)).slice(0,n);
+}
+const nowSlot=()=>{const h=new Date().getHours()+new Date().getMinutes()/60;
+  return h<10.5?'朝':h<15?'昼':h<21.5?'夜':'間食'};
+
+/* ================= 食事タブ ================= */
+let MEAL_DATE=todayStr(), MEAL_SLOT='朝', FOOD_I=-1;
+function mealGo(d){
+  const nx=dstr(new Date(dObj(MEAL_DATE).getTime()+d*86400000));
+  if(nx>todayStr())return;
+  MEAL_DATE=nx;render(true);
+}
+function viewMeal(){
+  const date=MEAL_DATE,isToday=date===todayStr();
+  let h=`<header><h1>食事</h1><div class="meta">${
+    Object.keys(ML).length?Object.keys(ML).length+'日ぶん':'カロリーとPFC'}</div></header>`;
+
+  h+=`<div class="row" style="margin-bottom:11px">
+    <button class="howto" onclick="mealGo(-1)">‹ 前の日</button>
+    <div class="grow" style="text-align:center;font-weight:600">${isToday?'今日 ':''}${fmtD(date)}</div>
+    <button class="howto" onclick="mealGo(1)" style="${isToday?'opacity:.3':''}">次の日 ›</button></div>`;
+
+  /* からだの情報が無いと目標が出せない。何を入れれば何が見えるのかを先に書く */
+  if(!bodyReady()){
+    h+=`<div class="card" style="text-align:center;padding:24px 18px;border-color:var(--accent)">
+      <div style="font-size:32px;line-height:1">🍚</div>
+      <b style="display:block;margin:10px 0 6px;font-size:16px">からだの情報を入れてください</b>
+      <div class="sub" style="font-size:13px;line-height:1.8;margin-bottom:14px">
+        身長・年齢・性別と、体重タブの体重から<br>
+        基礎代謝・1日の消費カロリー・PFCの目標量を計算します。</div>
+      <button class="btn" onclick="openBody()">からだの情報を入れる</button>
+      ${bodyKg()?'':'<div class="sub" style="margin-top:10px;font-size:11.5px">体重タブで今日の体重を記録すると計算できるようになります</div>'}</div>`;
+    return h+mealListHTML(date);
+  }
+
+  const mt=macroTarget(date),tot=dayTotal(date),burn=burnOf(date);
+  const left=mt.kcal-tot.kcal;
+  const pct=Math.min(100,Math.round(tot.kcal/mt.kcal*100));
+  const over=tot.kcal>mt.kcal;
+
+  h+=`<div class="card" style="text-align:center;padding:17px 13px">
+    <div class="sub">${over?'目標より':'あと'}</div>
+    <div style="font-size:40px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.15;color:${
+      over?'var(--warn)':'var(--fg)'}">${Math.abs(left)}<span style="font-size:16px;color:var(--sub)"> kcal</span></div>
+    <div class="sub">${over?'多く食べています':'食べられます'}</div>
+    <div class="kbar"><div class="bar${over?' over':''}" style="width:${pct}%"></div></div>
+    <div class="row sub" style="font-size:11.5px"><span class="grow" style="text-align:left">摂取 ${tot.kcal}</span>
+      <span>目標 ${mt.kcal} kcal</span></div>
+  </div>`;
+
+  const macRow=(label,now,goal,color)=>{
+    const w=goal?Math.min(100,Math.round(now/goal*100)):0;
+    const ov=goal&&now>goal*1.1;
+    return `<div class="mac"><span style="color:${color};font-weight:700">${label}</span>
+      <div class="trk"><div class="bar" style="width:${w}%;background:${ov?'var(--bad)':color}"></div></div>
+      <span class="num"><b>${now}</b> / ${goal}g</span></div>`;
+  };
+  h+=`<div class="card">
+    ${macRow('P',tot.p,mt.p,'var(--accent)')}
+    ${macRow('F',tot.f,mt.f,'var(--warn)')}
+    ${macRow('C',tot.c,mt.c,'var(--ok)')}
+    <div class="sub" style="font-size:11.5px;margin-top:2px">
+      P＝タンパク質（1g=4kcal）／F＝脂質（1g=9kcal）／C＝炭水化物（1g=4kcal）${
+      mt.tight?'<br><span style="color:var(--warn)">目標カロリーに対してPとFが多すぎて、Cの取り分がありません。設定を見直してください。</span>':''}</div>
+  </div>`;
+
+  /* 消費カロリー */
+  const wkKcal=burn.wk.kcal,woKcal=burn.wo.kcal;
+  h+=`<h2 class="sec">${isToday?'今日':'この日'}の消費（推定）</h2>
+  <div class="card">
+    <div class="row" style="align-items:baseline">
+      <div class="grow"><b style="font-size:26px;font-variant-numeric:tabular-nums">${burn.total}</b>
+        <span class="sub"> kcal</span></div>
+      <button class="howto" onclick="openBody()">設定</button>
+    </div>
+    <div style="margin-top:9px">`;
+  if(burn.mode==='rec'){
+    h+=`<div class="row" style="padding:5px 0"><span class="grow sub">生活（基礎代謝 ${burn.bmr.kcal} ×${CF.base}）</span>
+        <b style="font-variant-numeric:tabular-nums">${burn.base}</b></div>
+      <div class="row" style="padding:5px 0;border-top:1px solid var(--line)"><span class="grow sub">トレーニング${
+        burn.wo.strMin||burn.wo.cardioMin?`（${Math.round(burn.wo.strMin+burn.wo.cardioMin)}分）`:''}</span>
+        <b style="font-variant-numeric:tabular-nums">${woKcal?'+'+woKcal:'—'}</b></div>
+      <div class="row" style="padding:5px 0;border-top:1px solid var(--line)"><span class="grow sub">ウォーキング${
+        burn.wk.min?`（${burn.wk.min}分）`:''}</span>
+        <b style="font-variant-numeric:tabular-nums">${wkKcal?'+'+wkKcal:'—'}</b></div>
+      <div class="sub" style="font-size:11.5px;margin-top:9px">
+        記録した運動のぶんだけ、食べられる量も増えます。運動が少ない日は、直近14日の平均（${avgBurn14()}kcal）を下限にしています。</div>`;
+  }else{
+    h+=`<div class="row" style="padding:5px 0"><span class="grow sub">基礎代謝（${esc(burn.bmr.how)}）</span>
+        <b style="font-variant-numeric:tabular-nums">${burn.bmr.kcal}</b></div>
+      <div class="row" style="padding:5px 0;border-top:1px solid var(--line)"><span class="grow sub">活動レベル</span>
+        <b style="font-variant-numeric:tabular-nums">×${CF.act}</b></div>
+      <div class="sub" style="font-size:11.5px;margin-top:9px">
+        活動レベルの係数には運動ぶんが含まれているので、毎日同じ数字になります。${
+        (woKcal||wkKcal)?`参考までに、${isToday?'今日':'この日'}の記録から計算すると
+        トレーニング ${woKcal}kcal・ウォーキング ${wkKcal}kcal です（上の数字に足さないでください）。`:''}
+        日ごとの実際の運動から出したいときは、設定で「毎日の記録から」に変えられます。</div>`;
+  }
+  h+=`</div></div>`;
+
+  h+=mealListHTML(date);
+
+  /* 直近7日 */
+  const days=[];
+  for(let i=6;i>=0;i--)days.push(dstr(new Date(dObj(date).getTime()-i*86400000)));
+  const vals=days.map(d=>dayTotal(d).kcal);
+  if(vals.some(v=>v>0)){
+    const mx=Math.max(mt.kcal,...vals)*1.05;
+    const rec=vals.filter(v=>v>0);
+    h+=`<h2 class="sec">直近7日</h2>
+    <div class="card">
+      <div class="chart" style="position:relative">
+        <div style="position:absolute;left:0;right:0;bottom:${mt.kcal/mx*100}%;border-top:1px dashed var(--warn);pointer-events:none"></div>
+        ${vals.map(v=>`<div class="b${v?'':' z'}" style="height:${v?Math.max(2,v/mx*100):2}%;${
+          v>mt.kcal?'background:linear-gradient(180deg,var(--warn),#a06a10)':''}"></div>`).join('')}
+      </div>
+      <div class="xlab">${days.map(d=>`<span>${+d.split('-')[2]}</span>`).join('')}</div>
+      <div class="sub" style="margin-top:8px;font-size:11.5px">
+        記録した${rec.length}日の平均 <b style="color:var(--fg)">${Math.round(rec.reduce((a,b)=>a+b,0)/rec.length)}</b> kcal
+        ／ 点線が目標（${mt.kcal}kcal）です。1日ずつの上下より、1週間の平均が目標に近いかを見てください。</div>
+    </div>`;
+  }
+  return h;
+}
+
+/* 食事の一覧（時間帯ごと）。目標が未設定でも記録だけはできる */
+function mealListHTML(date){
+  const items=mealsOf(date),tot=dayTotal(date);
+  let h=`<h2 class="sec">食べたもの${items.length?`　合計 ${tot.kcal}kcal`:''}</h2>`;
+  const fav=favFoods(6);
+  if(fav.length){
+    h+=`<div class="card" style="padding:11px">
+      <div class="sub" style="font-size:11.5px;margin-bottom:8px">よく食べるもの（タップで${nowSlot()}に追加）</div>
+      <div style="display:flex;flex-wrap:wrap;gap:7px">
+      ${fav.map((x,i)=>`<button class="chip" onclick="mealFav(${i})">${esc(x.m.name)}
+        <span class="sub">${x.m.kcal}</span></button>`).join('')}</div></div>`;
+  }
+  for(const slot of SLOTS){
+    const list=items.filter(m=>m.slot===slot);
+    const sum=list.reduce((a,m)=>a+(+m.kcal||0),0);
+    h+=`<div class="card">
+      <div class="row" style="margin-bottom:${list.length?'4px':'0'}">
+        <b class="grow">${slot}${sum?`<span class="sub" style="font-weight:400"> ${Math.round(sum)}kcal</span>`:''}</b>
+        <button class="btn sm ghost nw" onclick="foodSheet('${slot}')">＋ 追加</button></div>`;
+    for(const m of list){
+      h+=`<div class="meal-i">
+        <button class="grow" style="min-width:0;text-align:left" onclick="mealForm('${m.id}')">
+          <div class="trunc">${esc(m.name)}</div>
+          <div class="sub" style="font-size:11.5px">P${r1(+m.p||0)} F${r1(+m.f||0)} C${r1(+m.c||0)}</div>
+        </button>
+        <b style="font-variant-numeric:tabular-nums">${Math.round(+m.kcal||0)}</b>
+        <button class="del sub" onclick="mealDel('${m.id}')" style="font-size:18px">×</button></div>`;
+    }
+    h+=`</div>`;
+  }
+  return h;
+}
+
+/* ---- 食品を選ぶ ---- */
+function sheetSwap(html){
+  const p=document.querySelector('#sheet .panel'),y=p.scrollTop;
+  document.getElementById('sheetP').innerHTML=html;
+  p.scrollTop=y;
+}
+function foodSheet(slot){
+  MEAL_SLOT=slot||nowSlot();
+  Sheet.open(`<h3>${esc(MEAL_SLOT)}に追加</h3>
+    <input id="foodq" placeholder="食品を検索…" oninput="foodFilter(this.value)" style="margin-bottom:9px">
+    <button class="btn ghost sm" style="width:100%;margin-bottom:11px" onclick="mealForm()">一覧に無いものを手で入力する</button>
+    <div id="foodlist">${foodRows()}</div>`);
+}
+function foodRows(){
+  let h='';
+  for(const cat of FOOD_CATS){
+    const list=FOODS.map((f,i)=>({f,i})).filter(x=>x.f.cat===cat);
+    if(!list.length)continue;
+    h+=`<div class="fg"><h2 class="sec">${esc(cat)}</h2>`;
+    for(const x of list){
+      const f=x.f;
+      h+=`<button class="pickitem fd" data-n="${esc(f.n)}" style="width:100%;text-align:left" onclick="foodAmt(${x.i})">
+        <div class="grow" style="min-width:0"><div class="trunc">${esc(f.n)}</div>
+          <div class="sub" style="font-size:11.5px">${f.u==='g'?`100gあたり ${f.k}kcal`:`${esc(f.s)} ${f.k}kcal`}
+            ・P${f.p} F${f.f} C${f.c}</div></div>
+        <span class="sub" style="font-size:15px">›</span></button>`;
+    }
+    h+=`</div>`;
+  }
+  return h;
+}
+function foodFilter(q){
+  q=q.trim();
+  document.querySelectorAll('#foodlist .fd').forEach(el=>{el.style.display=!q||el.dataset.n.includes(q)?'':'none'});
+  document.querySelectorAll('#foodlist .fg').forEach(g=>{
+    g.style.display=[...g.querySelectorAll('.fd')].some(i=>i.style.display!=='none')?'':'none'});
+}
+function foodAmt(i){
+  FOOD_I=i;const f=FOODS[i];
+  sheetSwap(`<h3>${esc(f.n)}</h3>
+    <div class="sub" style="margin-bottom:10px">${f.u==='g'?'食べた量（g）を入れてください':esc(f.s)+' を何個ぶん食べましたか'}</div>
+    <div class="step">
+      <button onclick="foodStep(-1)">−</button>
+      <input id="foodAmt" type="text" inputmode="decimal" value="${f.d}" oninput="foodPrev()">
+      <button onclick="foodStep(1)">＋</button>
+    </div>
+    <div class="sub" style="text-align:center;margin-top:5px">${f.u==='g'?'g':'個ぶん'}</div>
+    <div class="card" id="foodPv" style="margin-top:12px;text-align:center"></div>
+    <div class="row" style="gap:9px">
+      <button class="btn ghost" style="flex:1" onclick="foodSheet(MEAL_SLOT)">‹ 一覧へ</button>
+      <button class="btn" style="flex:2" onclick="foodAdd()">${esc(MEAL_SLOT)}に追加</button></div>`);
+  foodPrev();   // 入力欄ができてから計算する
+}
+const foodQty=()=>{const el=document.getElementById('foodAmt');
+  const v=parseFloat(String(el?el.value:'').replace(/[^\d.]/g,''));return v>0?v:0};
+function foodStep(d){
+  const f=FOODS[FOOD_I],el=document.getElementById('foodAmt');
+  const step=f.u==='g'?10:(f.d>=3?1:0.5);
+  el.value=r1(Math.max(0,foodQty()+d*step));
+  foodPrev();
+}
+function foodCalc(){
+  const f=FOODS[FOOD_I],q=foodQty(),k=f.u==='g'?q/100:q;
+  const name=f.u==='g'?`${f.n} ${r1(q)}g`:(q===1?f.n:`${f.n} ×${r1(q)}`);
+  return{name,kcal:Math.round(f.k*k),p:r1(f.p*k),f:r1(f.f*k),c:r1(f.c*k)};
+}
+function foodPvHTML(){
+  const v=foodCalc();
+  return `<div style="font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2">${v.kcal}
+    <span class="sub" style="font-size:14px">kcal</span></div>
+    <div class="sub">P ${v.p}g ／ F ${v.f}g ／ C ${v.c}g</div>`;
+}
+function foodPrev(){const el=document.getElementById('foodPv');if(el)el.innerHTML=foodPvHTML()}
+function foodAdd(){
+  if(!foodQty()){toast('量を入れてください');return}
+  mealPush(foodCalc());
+}
+function mealPush(o){
+  (ML[MEAL_DATE]=ML[MEAL_DATE]||[]).push({id:uid(),name:o.name,slot:MEAL_SLOT,
+    kcal:o.kcal,p:o.p,f:o.f,c:o.c,t:nowHM()});
+  saveML();Sheet.close();render();
+  toast(`${esc(o.name)} を記録しました（${o.kcal}kcal）`);
+}
+/* よく食べるものチップ。前に記録した内容をそのまま今の時間帯に足す */
+function mealFav(i){
+  const x=favFoods(6)[i];if(!x)return;
+  MEAL_SLOT=nowSlot();
+  mealPush({name:x.m.name,kcal:+x.m.kcal||0,p:+x.m.p||0,f:+x.m.f||0,c:+x.m.c||0});
+}
+
+/* ---- 手で入力・修正 ---- */
+function mealForm(id){
+  const m=id?mealsOf(MEAL_DATE).find(x=>x.id===id):null;
+  if(m)MEAL_SLOT=m.slot;
+  const row=(lab,fid,v,unit)=>`<div class="row" style="margin-bottom:8px"><span style="width:82px" class="sub">${lab}</span>
+    <input id="${fid}" class="grow" type="text" inputmode="decimal" value="${v}" placeholder="0" style="text-align:center">
+    <span class="sub" style="width:30px">${unit}</span></div>`;
+  Sheet.open(`<h3>${m?'記録を直す':'手で入力'}</h3>
+    <div class="seg" style="margin-bottom:11px">${SLOTS.map(s=>
+      `<button class="${s===MEAL_SLOT?'on':''}" onclick="mealSlotSel('${s}')">${s}</button>`).join('')}</div>
+    <input id="mfN" placeholder="食べたもの（例: コンビニの唐揚げ）" value="${m?esc(m.name):''}" style="margin-bottom:10px">
+    ${row('カロリー','mfK',m?Math.round(m.kcal):'','kcal')}
+    ${row('P タンパク質','mfP',m?r1(+m.p||0):'','g')}
+    ${row('F 脂質','mfF',m?r1(+m.f||0):'','g')}
+    ${row('C 炭水化物','mfC',m?r1(+m.c||0):'','g')}
+    <div class="sub" style="font-size:11.5px;margin:2px 0 12px">
+      カロリーを空けておくと、PFCから計算します（P4・F9・C4kcal/g）。パッケージの「栄養成分表示」の数字をそのまま入れてください。</div>
+    <button class="btn" onclick="mealSave('${m?m.id:''}')">${m?'保存する':'追加する'}</button>
+    ${m?`<button class="btn danger" style="margin-top:9px" onclick="mealDel('${m.id}')">この記録を削除</button>`:''}`);
+}
+function mealSlotSel(s){
+  MEAL_SLOT=s;
+  document.querySelectorAll('#sheetP .seg button').forEach(b=>b.classList.toggle('on',b.textContent.trim()===s));
+}
+function mealSave(id){
+  const num=i=>{const v=parseFloat(String(document.getElementById(i).value).replace(/[^\d.]/g,''));return v>0?v:0};
+  const name=document.getElementById('mfN').value.trim();
+  if(!name){toast('食べたものの名前を入れてください');return}
+  const p=num('mfP'),f=num('mfF'),c=num('mfC');
+  let kcal=num('mfK');
+  if(!kcal)kcal=Math.round(p*4+f*9+c*4);
+  if(!kcal&&!p&&!f&&!c){toast('カロリーかPFCのどれかを入れてください');return}
+  const list=ML[MEAL_DATE]=ML[MEAL_DATE]||[];
+  const m=id?list.find(x=>x.id===id):null;
+  if(m){Object.assign(m,{name,slot:MEAL_SLOT,kcal:Math.round(kcal),p:r1(p),f:r1(f),c:r1(c)})}
+  else list.push({id:uid(),name,slot:MEAL_SLOT,kcal:Math.round(kcal),p:r1(p),f:r1(f),c:r1(c),t:nowHM()});
+  saveML();Sheet.close();render();
+  toast(m?'記録を直しました':`${esc(name)} を記録しました（${Math.round(kcal)}kcal）`);
+}
+function mealDel(id){
+  const list=mealsOf(MEAL_DATE),m=list.find(x=>x.id===id);
+  if(!m)return;
+  if(!confirm(`「${m.name}」を削除しますか？`))return;
+  ML[MEAL_DATE]=list.filter(x=>x.id!==id);
+  if(!ML[MEAL_DATE].length)delete ML[MEAL_DATE];
+  saveML();Sheet.close();render();
+}
+
+/* ---- からだの情報 ---- */
+function openBody(){Sheet.open(bodyHTML())}
+function bodySet(k,v){CF[k]=v;saveCF();sheetSwap(bodyHTML());render()}
+function bodyNum(k,el){
+  const v=String(el.value).replace(/[^\d.]/g,'');
+  if(v!==el.value)el.value=v;
+  CF[k]=v;saveCF();render();
+  /* 入れた数字を計算結果に反映する。ただし入力の確定は「次の入力欄を触ったとき」にも起きるので、
+     すぐ差し替えるとその欄が消えてしまいます。どの入力欄にも居ないときだけ出し直します */
+  setTimeout(()=>{
+    const a=document.activeElement;
+    if(a&&a.tagName==='INPUT')return;
+    if(document.getElementById('sheetP'))sheetSwap(bodyHTML());
+  },0);
+}
+function bodyHTML(){
+  const kg=bodyKg(),fat=bodyFat(),b=bmrInfo(),t=tdee(todayStr()),mt=macroTarget(todayStr());
+  const opt=(on,title,note,onclick)=>`<button class="opt${on?' on':''}" onclick="${onclick}">
+    <b>${title}</b>${note?`<span>${note}</span>`:''}</button>`;
+  let h=`<h3>からだの情報</h3>
+  <div class="sub" style="margin-bottom:12px">ここで入れた数字から、目標カロリーとPFCを計算します。
+    体重と体脂肪率は体重タブの記録（いちばん新しいもの）を使います。</div>
+
+  <div class="card">
+    <div class="row" style="margin-bottom:9px"><span class="grow">身長</span>
+      <input style="width:110px;text-align:center" type="text" inputmode="decimal" placeholder="—"
+        value="${CF.height||''}" onchange="bodyNum('height',this)"> <span class="sub">cm</span></div>
+    <div class="row" style="margin-bottom:9px"><span class="grow">年齢</span>
+      <input style="width:110px;text-align:center" type="text" inputmode="numeric" placeholder="—"
+        value="${CF.age||''}" onchange="bodyNum('age',this)"> <span class="sub">歳</span></div>
+    <div class="row"><span class="grow">性別</span>
+      <div class="seg" style="width:150px">
+        <button class="${CF.sex!=='f'?'on':''}" onclick="bodySet('sex','m')">男性</button>
+        <button class="${CF.sex==='f'?'on':''}" onclick="bodySet('sex','f')">女性</button></div></div>
+    <div class="sub" style="font-size:11.5px;margin-top:9px">
+      体重 ${kg?kg.toFixed(1)+'kg':'（未記録）'}${fat?` ／ 体脂肪率 ${fat}%`:''}
+      ${fat?'':'　体重タブで体脂肪率も記録すると、基礎代謝をより正確に出せます'}</div>
+  </div>
+
+  <h2 class="sec">消費カロリーの出し方</h2>
+  <div class="card">
+    <div class="seg" style="margin-bottom:11px">
+      <button class="${CF.burnMode!=='rec'?'on':''}" onclick="bodySet('burnMode','act')">活動レベルから</button>
+      <button class="${CF.burnMode==='rec'?'on':''}" onclick="bodySet('burnMode','rec')">毎日の記録から</button></div>`;
+  if(CF.burnMode==='rec'){
+    h+=`<div class="sub" style="font-size:11.5px;margin-bottom:9px">
+      生活ぶんに、その日に記録したトレーニングとウォーキングを足します。動いた日と休んだ日の差が見えます。</div>
+      ${BASE_LEVELS.map(([v,l])=>opt(+CF.base===v,l,'',`bodySet('base',${v})`)).join('')}`;
+  }else{
+    h+=`<div class="sub" style="font-size:11.5px;margin-bottom:9px">
+      よく使われる決め方です。運動ぶんも係数に含まれているので、毎日同じ数字になります。</div>
+      ${ACT_LEVELS.map(([v,l,n])=>opt(+CF.act===v,l,n,`bodySet('act',${v})`)).join('')}`;
+  }
+  h+=`</div>
+
+  <h2 class="sec">目標</h2>
+  <div class="card">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+      ${PLANS.map(([v,l])=>`<button class="opt${+CF.plan===v?' on':''}" style="margin:0;padding:11px 12px"
+        onclick="bodySet('plan',${v})"><b style="font-size:14px">${l}</b>
+        <span>${v>0?'+':''}${v}%</span></button>`).join('')}
+    </div>`;
+  if(t){
+    const tk=targetKcal(todayStr()),diff=tk-t;
+    const perWeek=diff*7/7200;
+    h+=`<div class="sub" style="font-size:11.5px;margin-top:10px">
+      ふだんの消費 ${t}kcal に対して目標 <b style="color:var(--fg)">${tk}kcal</b>（${diff>0?'+':''}${diff}）。
+      ${Math.abs(perWeek)<0.05?'体重を保つペースです。':`このまま続けると1週間で約 ${Math.abs(perWeek).toFixed(1)}kg ${diff<0?'減る':'増える'}計算です。`}
+      ${b&&tk<b.kcal?'<br><span style="color:var(--warn)">目標が基礎代謝（'+b.kcal+'kcal）を下回っています。減らしすぎると筋肉も落ちます。</span>':''}</div>`;
+  }
+  h+=`</div>
+
+  <h2 class="sec">PFCの決め方</h2>
+  <div class="card">
+    <div class="sub" style="font-size:12px;margin-bottom:7px">タンパク質（体重1kgあたり）</div>
+    <div class="seg" style="margin-bottom:11px">${[1.6,1.8,2.0,2.2,2.4].map(v=>
+      `<button class="${+CF.pgkg===v?'on':''}" onclick="bodySet('pgkg',${v})">${v}g</button>`).join('')}</div>
+    <div class="sub" style="font-size:12px;margin-bottom:7px">脂質（カロリーに対する割合）</div>
+    <div class="seg">${[20,25,30].map(v=>
+      `<button class="${+CF.fpct===v?'on':''}" onclick="bodySet('fpct',${v})">${v}%</button>`).join('')}</div>
+    <div class="sub" style="font-size:11.5px;margin-top:10px">
+      筋トレをしているなら体重×1.6〜2.2gが目安です。脂質は減らしすぎるとホルモンに響くので、体重×0.6gを下限にしています。
+      炭水化物は、残りのカロリーぶんが自動で決まります。</div>
+  </div>`;
+
+  if(b&&mt){
+    h+=`<h2 class="sec">いまの計算結果</h2>
+    <div class="card">
+      <div class="row" style="padding:4px 0"><span class="grow sub">基礎代謝（${esc(b.how)}）</span>
+        <b style="font-variant-numeric:tabular-nums">${b.kcal} kcal</b></div>
+      ${b.lbm?`<div class="row" style="padding:4px 0"><span class="grow sub">除脂肪体重</span>
+        <b style="font-variant-numeric:tabular-nums">${b.lbm} kg</b></div>`:''}
+      <div class="row" style="padding:4px 0"><span class="grow sub">1日の消費（ふだん）</span>
+        <b style="font-variant-numeric:tabular-nums">${t} kcal</b></div>
+      <div class="row" style="padding:4px 0;border-top:1px solid var(--line);margin-top:4px">
+        <span class="grow sub">目標カロリー</span>
+        <b style="font-variant-numeric:tabular-nums;color:var(--accent)">${mt.kcal} kcal</b></div>
+      <div class="row" style="padding:4px 0"><span class="grow sub">P ／ F ／ C</span>
+        <b style="font-variant-numeric:tabular-nums">${mt.p} ／ ${mt.f} ／ ${mt.c} g</b></div>
+      <div class="sub" style="font-size:11.5px;margin-top:9px">
+        すべて推定値です。2週間ほど記録して体重が思った向きに動かなければ、目標を100〜200kcalずらしてみてください。
+        体重が変われば、この数字も自動で更新されます。</div>
+    </div>`;
+  }
+  return h;
+}
+
 /* ================= 履歴 ================= */
 function viewHist(){
   cleanup();
@@ -2120,6 +2707,14 @@ function viewSet(){
       <input style="width:120px;text-align:center" type="number" inputmode="decimal" step="0.1" placeholder="—"
         value="${CF.goal||''}" onchange="CF.goal=this.value;saveCF()"> <span class="sub">kg</span></div>`);
 
+  h+=foldSec('meal','食事（カロリーとPFC）',bodyReady()?macroTarget(todayStr()).kcal+'kcal/日':'未設定',`
+    <button class="btn ghost" onclick="openBody()">からだの情報と目標を設定</button>
+    <div class="sub" style="margin-top:9px;font-size:11.5px">
+      身長・年齢・活動レベルから、1日の消費カロリーと目標のPFCを計算します。${
+      bodyReady()?(m=>`いまの目標は <b style="color:var(--fg)">${m.kcal}kcal</b>
+        （P${m.p} / F${m.f} / C${m.c}g）です。`)(macroTarget(todayStr()))
+        :'まだ計算に必要な情報が足りません。'}</div>`);
+
   h+=foldSec('push','毎朝の通知','7:00',`
     <div id="pushStat" class="sub" style="margin-bottom:10px;font-size:12.5px">確認中…</div>
     <button class="btn ghost" id="pushBtn" onclick="pushToggle()">通知をオンにする</button>
@@ -2161,7 +2756,7 @@ function applyPreset(k){
   CF.routine=PRESETS[k].slice();saveCF();render();
 }
 function exportJSON(){
-  const blob=new Blob([JSON.stringify({v:2,exercises:EX,workouts:WO,weights:WT,walks:WALK,config:CF},null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({v:3,exercises:EX,workouts:WO,weights:WT,walks:WALK,meals:ML,config:CF},null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`kasane-${todayStr()}.json`;a.click();
 }
 function importJSON(inp){
@@ -2171,21 +2766,22 @@ function importJSON(inp){
     const d=JSON.parse(r.result);
     if(!d.workouts||!d.exercises)throw 0;
     if(!confirm('現在のデータを上書きします。よろしいですか？'))return;
-    EX=d.exercises;WO=d.workouts;WT=d.weights||{};WALK=d.walks||{};CF=Object.assign(CF,d.config||{});
+    EX=d.exercises;WO=d.workouts;WT=d.weights||{};WALK=d.walks||{};ML=d.meals||{};CF=Object.assign(CF,d.config||{});
     /* 古いバックアップだと、その後に増えたプリセット種目が入っていない。
        seedVersion は上書きされないので起動時の自動追加も走らない＝消えたままになる。
        ここで不足分を足しておく（既存の種目・記録には触れない） */
     const have=new Set(EX.map(e=>e.name));
     EX=EX.concat(SEED.filter(s=>!have.has(s[0])).map(mkEx));
-    saveEX();saveWO();saveWT();saveWALK();saveCF();render();alert('読み込みました');
+    saveEX();saveWO();saveWT();saveWALK();saveML();saveCF();render();alert('読み込みました');
   }catch(e){alert('ファイルを読めませんでした')}};
   r.readAsText(f);inp.value='';
 }
 function wipe(){
-  if(!confirm('すべての記録（トレーニング・体重・ウォーキング）を削除します。元に戻せません。'))return;
+  if(!confirm('すべての記録（トレーニング・体重・ウォーキング・食事）を削除します。元に戻せません。'))return;
   if(!confirm('本当によろしいですか？'))return;
   localStorage.removeItem(K.wo);localStorage.removeItem(K.wt);localStorage.removeItem(K.wk);
-  WO=[];WT={};WALK={};render();
+  localStorage.removeItem(K.ml);
+  WO=[];WT={};WALK={};ML={};render();
 }
 
 /* ================= 初回セットアップ =================
@@ -2302,7 +2898,11 @@ const TERMS=[
   ['総ボリューム','重量×回数×セット数を足したもの。同じ種目なら、この数字が増えている＝成長しています'],
   ['推定1RM','1回だけなら何kg挙げられそうか、の推定値。実際に測らなくても、記録から自動で計算されます'],
   ['PPL','Push（押す＝胸・肩・三頭）／Pull（引く＝背中・二頭）／Legs（脚・腹）の3つに分ける方法'],
-  ['自己ベスト','その種目でこれまでに挙げた最高の重量×回数。更新すると 🎉 が出ます']
+  ['自己ベスト','その種目でこれまでに挙げた最高の重量×回数。更新すると 🎉 が出ます'],
+  ['PFC','タンパク質（Protein）・脂質（Fat）・炭水化物（Carbohydrate）の3つ。1gあたり4・9・4kcalで、この3つを足したものが総カロリーです'],
+  ['基礎代謝（BMR）','寝ているだけでも使うエネルギー。体重・身長・年齢から計算します。体脂肪率を記録していると、筋肉の量から出せるのでより正確です'],
+  ['1日の消費カロリー（TDEE）','基礎代謝に、生活と運動で使うぶんを足したもの。食事タブで「活動レベルから」か「毎日の記録から」を選べます'],
+  ['目標カロリー','1日の消費カロリーから、減量なら引き、増量なら足した数字。7200kcalの差でおよそ体重1kgぶんです']
 ];
 const WARMUP_GUIDE={
   'Push':['腕を大きく前回し・後ろ回し 各10回','肩甲骨を寄せて下げる 10回','壁に手をついて胸を開く','膝つき腕立て 10回'],
@@ -2541,6 +3141,7 @@ function showHelp(){
     <div class="card">
       <div class="term"><b>記録</b><span>今日やること。上部で部位と時間を変えられます</span></div>
       <div class="term"><b>体重</b><span>毎日の体重。日々の増減より、緑の7日平均の向きを見てください</span></div>
+      <div class="term"><b>食事</b><span>目標カロリーとPFC、食べたものの記録、その日の消費カロリー。まず「からだの情報」を入れてください</span></div>
       <div class="term"><b>履歴</b><span>週にどの部位を何セットやったか。緑の帯（10〜20セット）に入っていれば十分です</span></div>
       <div class="term"><b>種目</b><span>57種目の一覧。タップすると、その種目だけの記録と伸びが見られます</span></div>
       <div class="term"><b>設定</b><span>曜日ごとの部位、時間、インターバル、バックアップ</span></div>
@@ -2552,7 +3153,7 @@ function showHelp(){
 /* ================= 更新 =================
    ホーム画面から開くとSafariの再読み込みボタンが無いので、設定タブから明示的に更新できるようにする。
    キャッシュを消して読み直すだけなので、localStorageの記録には触れません */
-const APP_V='v3.12';
+const APP_V='v3.13';
 let UPDATE_READY=false;
 
 async function updateApp(){
@@ -2591,6 +3192,8 @@ function watchForUpdate(reg){
 function markUpdateReady(){
   if(UPDATE_READY)return;
   UPDATE_READY=true;
+  /* 「アプリの更新」は畳まないので、設定タブを見ていれば #updMsg がそのまま見えます。
+     他のタブに居るときだけトーストで知らせます */
   const msg=document.getElementById('updMsg');
   if(msg)msg.innerHTML='<span style="color:var(--ok)">新しいバージョンがあります。タップして更新してください。</span>';
   else toast('新しいバージョンがあります（設定タブ）');

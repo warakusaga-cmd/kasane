@@ -1,5 +1,5 @@
-const CACHE = 'kasane-v39';
-const ASSETS = ['./', './index.html', './figures.js', './data.js',
+const CACHE = 'kasane-v40';
+const ASSETS = ['./', './index.html', './figures.js', './data.js', './foods.js',
                 './manifest.json', './icon.png', './icon-192.png',
                 './apple-touch-icon.png'];
 
