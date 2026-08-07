@@ -3,17 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#0f1115">
+<meta name="theme-color" content="#f4f6f9">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Kasane">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Kasane</title>
 <style>
 :root{
-  --bg:#0f1115; --card:#181b22; --card2:#1f232c; --line:#2a2f3a;
-  --fg:#e8eaf0; --sub:#8b93a5; --accent:#4f8cff; --ok:#38d39f; --warn:#ffb020; --bad:#ff5c5c;
+  /* 白ベース。種目イラスト（img/）が白背景なので、そこに合わせている。
+     色を変えるときはこの8色だけ触ればアプリ全体が変わる */
+  --bg:#f4f6f9; --card:#ffffff; --card2:#eef1f6; --line:#e2e7ef;
+  --fg:#171a20; --sub:#6c7685; --accent:#2f6fe4; --ok:#0f9d6b; --warn:#c07800; --bad:#dc3545;
+  --navbg:rgba(255,255,255,.94);      /* 下タブの背景（すりガラス） */
+  --shadow:0 1px 2px rgba(16,24,40,.05);
   --safe-b:env(safe-area-inset-bottom,0px);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -33,12 +37,12 @@ header h1{font-size:20px;margin:0;letter-spacing:.02em}
 header .meta{color:var(--sub);font-size:13px;margin-left:auto}
 
 nav{position:fixed;left:0;right:0;bottom:0;z-index:50;display:grid;grid-template-columns:repeat(5,1fr);
-  background:rgba(15,17,21,.93);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding-bottom:var(--safe-b)}
+  background:var(--navbg);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding-bottom:var(--safe-b)}
 nav button{padding:9px 0 8px;color:var(--sub);font-size:10px;display:flex;flex-direction:column;align-items:center;gap:3px}
 nav button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 nav button.on{color:var(--accent)}
 
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:11px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:11px;box-shadow:var(--shadow)}
 .row{display:flex;align-items:center;gap:9px}
 .grow{flex:1;min-width:0}
 .sub{color:var(--sub);font-size:12.5px}
@@ -61,6 +65,18 @@ h2.sec{font-size:13px;color:var(--sub);margin:20px 2px 9px;font-weight:600;lette
 .today .big em{font-style:normal;color:var(--accent)}
 .today.rest .big em{color:var(--sub)}
 
+/* 今日のひとこと（記録タブの先頭） */
+.daily{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:11px;box-shadow:var(--shadow)}
+.daily.push{background:linear-gradient(135deg,rgba(255,176,32,.22),rgba(255,176,32,.06));border-color:rgba(214,140,0,.55)}
+.daily .hd{font-size:16.5px;font-weight:700;line-height:1.45;margin-top:1px}
+.daily .hd em{font-style:normal;color:var(--warn)}
+.daily .lead{font-size:13px;line-height:1.65;margin-top:5px}
+.daily .fact{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--sub);line-height:1.55;margin-top:8px}
+.daily .fact b{color:var(--fg);font-weight:600;font-variant-numeric:tabular-nums}
+.daily .tip{margin-top:11px;border-top:1px solid var(--line);padding-top:9px}
+.daily .tip .cat{font-size:11px;color:var(--accent);background:rgba(79,140,255,.13);border-radius:6px;padding:3px 8px}
+.daily .tip p{margin:7px 0 0;font-size:13px;line-height:1.7}
+
 .menu-i{display:flex;align-items:center;gap:9px;padding:10px 2px;border-bottom:1px solid var(--line)}
 .menu-i:last-child{border-bottom:0}
 .menu-i .rep{font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums}
@@ -75,10 +91,11 @@ h2.sec{font-size:13px;color:var(--sub);margin:20px 2px 9px;font-weight:600;lette
 .setrow.done .chk{background:rgba(56,211,159,.15);border-color:var(--ok);color:var(--ok)}
 .setrow.done input{color:var(--sub)}
 .setrow .del{color:var(--sub);font-size:19px;text-align:center;line-height:1}
-.setrow.hasph input::placeholder{color:#6a7386;opacity:1}
+.setrow.hasph input::placeholder{color:#9aa3b2;opacity:1}
 
 #toast{position:fixed;left:14px;right:14px;bottom:calc(132px + var(--safe-b));z-index:120;
-  background:rgba(56,211,159,.16);border:1px solid var(--ok);color:var(--fg);
+  background:var(--card);border:1px solid var(--ok);color:var(--fg);
+  box-shadow:0 10px 30px rgba(16,24,40,.22);
   border-radius:12px;padding:11px 14px;font-size:13.5px;text-align:center;max-width:612px;margin:0 auto;
   opacity:0;transform:translateY(8px);pointer-events:none;transition:.22s}
 #toast.on{opacity:1;transform:none}
@@ -87,7 +104,7 @@ h2.sec{font-size:13px;color:var(--sub);margin:20px 2px 9px;font-weight:600;lette
 .wk .trk{position:relative;height:16px;background:var(--card2);border-radius:5px;overflow:hidden}
 .wk .band{position:absolute;top:0;bottom:0;background:rgba(56,211,159,.16);border-left:1px solid rgba(56,211,159,.45);border-right:1px solid rgba(56,211,159,.45)}
 .wk .bar{position:absolute;top:0;bottom:0;left:0;background:var(--accent);border-radius:5px}
-.wk .bar.lo{background:#5b647a} .wk .bar.hi{background:var(--warn)}
+.wk .bar.lo{background:#b4bcc9} .wk .bar.hi{background:var(--warn)}
 .wk .num{text-align:right;font-variant-numeric:tabular-nums;font-size:13px}
 
 .plate{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin:10px 0}
@@ -101,14 +118,14 @@ h2.sec{font-size:13px;color:var(--sub);margin:20px 2px 9px;font-weight:600;lette
 
 #timer{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + var(--safe-b));z-index:60;
   background:var(--card2);border:1px solid var(--accent);border-radius:999px;padding:9px 15px;
-  display:none;align-items:center;gap:11px;box-shadow:0 8px 26px rgba(0,0,0,.5)}
+  display:none;align-items:center;gap:11px;box-shadow:0 8px 26px rgba(16,24,40,.16)}
 #timer.on{display:flex}
 #timer .t{font-variant-numeric:tabular-nums;font-weight:600;font-size:17px;min-width:52px;text-align:center}
 #timer.fin{border-color:var(--ok)} #timer.fin .t{color:var(--ok)}
 
 #sheet{position:fixed;inset:0;z-index:100;display:none}
 #sheet.on{display:block}
-#sheet .bg{position:absolute;inset:0;background:rgba(0,0,0,.62)}
+#sheet .bg{position:absolute;inset:0;background:rgba(16,24,40,.42)}
 #sheet .panel{position:absolute;left:0;right:0;bottom:0;max-height:88%;overflow:auto;background:var(--bg);
   border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:0 14px calc(20px + var(--safe-b));max-width:640px;margin:0 auto}
 #sheet h3{margin:2px 0 12px;font-size:16px}
@@ -124,6 +141,13 @@ h2.sec{font-size:13px;color:var(--sub);margin:20px 2px 9px;font-weight:600;lette
 /* 図解 */
 .figbox{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:6px 6px 2px;margin-bottom:12px}
 .figbox svg{width:100%;max-width:280px;display:block;margin:0 auto}
+.figwrap{position:relative;width:100%;max-width:280px;margin:0 auto}
+.figwrap img{width:100%;display:block;border-radius:10px}
+.figwrap .figB{position:absolute;left:0;top:0;opacity:0}
+.figwrap.two .figB{animation:figloop 1.8s ease-in-out infinite}
+@keyframes figloop{0%,38%{opacity:0}50%,88%{opacity:1}100%{opacity:0}}
+.figcap{text-align:center;padding:2px 0 6px;font-size:11.5px}
+@media (prefers-reduced-motion:reduce){.figwrap.two .figB{animation:none;opacity:.45}}
 .sk{fill:none;stroke:var(--fg);stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
 .sk circle{fill:var(--fg);stroke:none}
 .eq{fill:var(--accent);stroke:var(--accent);stroke-width:5;stroke-linecap:round}
@@ -140,12 +164,12 @@ h2.sec{font-size:13px;color:var(--sub);margin:20px 2px 9px;font-weight:600;lette
   background:var(--accent);color:#fff;font-size:11.5px;font-weight:700;display:flex;align-items:center;justify-content:center}
 .bullets{padding:0 0 0 18px;margin:0;font-size:13.5px}
 .bullets li{margin-bottom:5px}
-.bullets.ng{color:#ffb9b9}
+.bullets.ng{color:var(--bad)}
 .bullets.ng li::marker{color:var(--bad)}
 
 /* チャート */
 .chart{display:flex;align-items:flex-end;gap:5px;height:110px;margin:6px 0 3px}
-.chart .b{flex:1;background:linear-gradient(180deg,var(--accent),#2f5fb3);border-radius:4px 4px 0 0;min-height:2px}
+.chart .b{flex:1;background:linear-gradient(180deg,var(--accent),#6da2ff);border-radius:4px 4px 0 0;min-height:2px}
 .chart .b.z{background:var(--line)}
 .xlab{display:flex;gap:5px;color:var(--sub);font-size:10px}
 .xlab span{flex:1;text-align:center;overflow:hidden}
@@ -157,21 +181,6 @@ h2.sec{font-size:13px;color:var(--sub);margin:20px 2px 9px;font-weight:600;lette
 .wchart .dot{fill:var(--accent)}
 .wchart text{fill:var(--sub);font-size:9px}
 .wchart .area{fill:url(#wg)}
-
-/* 設定の折りたたみ */
-.acc{margin-bottom:9px}
-.acc-h{display:flex;align-items:center;gap:10px;width:100%;text-align:left;
-  background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 13px}
-.acc.on .acc-h{border-color:var(--accent)}
-.acc-t{font-weight:600;font-size:14.5px;white-space:nowrap}
-.acc-s{color:var(--sub);font-size:11.5px;margin-left:auto;min-width:0;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
-.acc-x{color:var(--sub);font-size:16px;line-height:1;flex:none;transition:transform .18s}
-.acc.on .acc-x{transform:rotate(90deg);color:var(--accent)}
-.acc-b{display:none;padding-top:9px}
-.acc.on .acc-b{display:block}
-@media (prefers-reduced-motion:reduce){.acc-x{transition:none}}
-header button.meta{font-size:12.5px;padding:2px 0}
 
 /* 食事（カロリーとPFC） */
 .kbar{position:relative;height:11px;background:var(--card2);border-radius:6px;overflow:hidden;margin:12px 0 5px}
@@ -269,9 +278,11 @@ header button.meta{font-size:12.5px;padding:2px 0}
   </div>
 </div>
 
-<script src="figures.js"></script>
-<script src="data.js"></script>
-<script src="foods.js"></script>
+<!-- ?v= はキャッシュ対策。ブラウザは同じURLだと古いファイルを使い続けるので、
+     data.js / figures.js / foods.js を直したら、下の APP_V と一緒にこの数字も上げること -->
+<script src="figures.js?v=3.12"></script>
+<script src="data.js?v=3.12"></script>
+<script src="foods.js?v=3.12"></script>
 <script>
 /* ================= storage ================= */
 const K={ex:'kintore.exercises',wo:'kintore.workouts',cf:'kintore.config',wt:'kintore.weights',
@@ -282,7 +293,8 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 
 const SEED=[
   ['ベンチプレス','胸'],['インクラインベンチプレス','胸'],['ダンベルプレス','胸'],
-  ['インクラインダンベルプレス','胸'],['チェストプレス','胸'],['ダンベルフライ','胸'],
+  ['インクラインダンベルプレス','胸'],['チェストプレス','胸'],['インクラインチェストプレス','胸'],
+  ['ダンベルフライ','胸'],
   ['ペックフライ','胸'],['ケーブルクロスオーバー','胸'],['ケーブルフライ','胸'],
   ['デッドリフト','背中'],['ルーマニアンデッドリフト','背中'],['ラットプルダウン','背中'],
   ['ベントオーバーロー','背中'],['ワンハンドダンベルロー','背中'],['シーテッドロー','背中'],
@@ -301,14 +313,19 @@ const SEED=[
   ['腹筋ローラー','腹','bw'],['クランチ','腹','bw'],['シットアップ','腹','bw'],
   ['レッグレイズ','腹','bw'],['ハンギングレッグレイズ','腹','bw'],['ロシアンツイスト','腹','bw'],
   ['プランク','腹','time'],['サイドプランク','腹','time'],['ケーブルクランチ','腹'],['アブドミナル','腹'],
+  ['トーソローテーション','腹'],
   ['ランニング','有酸素','time'],['ウォーキング','有酸素','time'],['エアロバイク','有酸素','time'],
   ['ローイングマシン','有酸素','time'],['クロストレーナー','有酸素','time'],['縄跳び','有酸素','time'],
+  /* スミスマシン（バーがレールで固定されている台。1人でも追い込みやすい） */
+  ['スミスマシンベンチプレス','胸'],['スミスマシンインクラインプレス','胸'],
+  ['スミスマシンショルダープレス','肩'],['スミスマシンベントオーバーロー','背中'],
+  ['スミスマシンスクワット','脚'],['スミスマシンヒップスラスト','脚'],['スミスマシンカーフレイズ','脚'],
 ];
 
 /* SEEDを増やしたらここを上げる。既存ユーザーには不足分だけが追加されます。
    追加のみ・削除はしないので、記録が消えることはありません。
    自分で削除した種目は、次にこの番号を上げるまで復活しません */
-const SEED_V=4;
+const SEED_V=7;   /* スミスマシン7種・インクラインチェストプレス・トーソローテーションを追加 */
 const mkEx=s=>({id:uid(),name:s[0],part:s[1],unit:s[2]||'kg'});
 
 let EX=load(K.ex,null);
@@ -339,7 +356,7 @@ if(load(K.tv,1)<TIME_V){
 let WT=load(K.wt,{});
 let WALK=load(K.wk,{});   // 朝ウォーキングなどの記録。日付→{min,km?,t}
 let ML=load(K.ml,{});     // 食事の記録。日付→[{id,name,slot,kcal,p,f,c,t}]
-let CF=Object.assign({rest:90,unit:'kg',restBy:null,
+let CF=Object.assign({rest:90,unit:'kg',restBy:null,alarm:'loud',
   routine:['休み','胸・腕','休み','背中・肩','休み','脚・腹','有酸素'],
   goal:'', wrange:30, duration:60,
   /* からだの情報（PFC計算用）。身長cm・年齢・性別。体重と体脂肪率は体重タブの記録を使う */
@@ -545,8 +562,14 @@ const minPerSet=part=>(WORK_SEC+restFor(part))/60;
 /* その部位でやれる種目の候補。MENUSの分を優先し、時間が余ったら同部位の他の種目を足す */
 function candidatesFor(part){
   const M=MENUS[part];
-  const ng=GROUP_EXCLUDE[part]||[];
-  const out=M?M.items.map(([name,sets,rep,note])=>({name,base:sets,rep,note})):[];
+  /* 動作に合わない種目（GROUP_EXCLUDE）に加えて、
+     通っているジムに器具が無い種目（NO_EQUIP）も、おすすめには出さない */
+  const ng=[...(GROUP_EXCLUDE[part]||[]),...(typeof NO_EQUIP!=='undefined'?NO_EQUIP:[])];
+  /* fin:1 のメニューは、最後の1種目が「締めのケーブル種目」。
+     時間で削られないよう印を付けて、fillPart 側で別扱いにする */
+  const out=M?M.items
+      .map(([name,sets,rep,note],i)=>({name,base:sets,rep,note,finisher:!!(M.fin&&i===M.items.length-1)}))
+      .filter(c=>!ng.includes(c.name)):[];
   const mk=e=>({name:e.name,base:e.unit==='time'?2:3,
     rep:e.unit==='time'?'60秒':e.unit==='bw'?'限界まで':'10〜12回',note:'時間が余ったら',extra:true});
   /* 「時間が余ったら」枠は部位ごとに1つずつ交互に取る。
@@ -562,13 +585,27 @@ function candidatesFor(part){
    （週10〜20セット/部位の目安を、週2回に割ったときの上限） */
 const SESSION_CAP=12;
 function fillPart(part,budgetMin){
-  const cands=candidatesFor(part);
+  const all=candidatesFor(part);
+  const fin=all.find(c=>c.finisher);                     // 締めのケーブル種目（無いメニューもある）
+  const cands=all.filter(c=>!c.finisher);
   const chosen=[],load={};                               // load: 実際の部位 → このセッションのセット数
   const partOf=n=>{const e=exByName(n);return e?e.part:null};
   /* インターバルは部位ごとに違うので、1セットの所要時間も種目ごとに変わる */
   const mpsOf=n=>minPerSet(partOf(n)||part);
-  const room=n=>{const p=partOf(n);return p?Math.max(0,SESSION_CAP-(load[p]||0)):99};
+  /* 締めだけは SESSION_CAP を2セットだけ超えてよい。
+     枠を先に取り置くやり方だと、締めを入れるかわりに主要種目（背中のベントオーバーローなど）が
+     落ちてしまった。締めは軽いケーブル種目なので、上限を少し超えるほうが実害が小さい。 */
+  const finPart=fin?partOf(fin.name):null;
+  let finBonus=false;
+  const room=n=>{const p=partOf(n);if(!p)return 99;
+    const cap=SESSION_CAP+((finBonus&&p===finPart)?2:0);
+    return Math.max(0,cap-(load[p]||0))};
   let left=budgetMin;
+  /* 締めのぶんの時間を先に取り置く。
+     そうしないと、持ち時間が短い日に真っ先に締めが削られてしまう
+     （締めこそ最後まで残したい種目なので、順番どおりに詰めると本末転倒になる） */
+  const holdFor=fin?Math.min(budgetMin,SETUP_MIN+2*mpsOf(fin.name)):0;
+  left-=holdFor;
   for(const c of cands){
     const mps=mpsOf(c.name);
     if(left<SETUP_MIN+2*mps)continue;                    // これは入らないが、休みの短い部位ならまだ入る
@@ -582,6 +619,18 @@ function fillPart(part,budgetMin){
     const mps=mpsOf(c.name);
     while(left>=mps&&c.sets<c.base+1&&room(c.name)>0){
       c.sets++;left-=mps;const p=partOf(c.name);if(p)load[p]++;
+    }
+  }
+  /* 取り置いたぶんを戻して、締めをいちばん最後に足す。
+     「時間が余ったら」枠より後ろに来るので、締めは必ずメニューの最後になる */
+  if(fin&&chosen.length){
+    left+=holdFor;finBonus=true;          // 取り置いた時間を戻し、締めぶんの枠を開ける
+    const mps=mpsOf(fin.name);
+    const sets=Math.min(fin.base,room(fin.name),Math.floor((left-SETUP_MIN)/mps));
+    if(sets>=2){
+      chosen.push(Object.assign({},fin,{sets}));
+      left-=SETUP_MIN+sets*mps;
+      const p=partOf(fin.name);if(p)load[p]=(load[p]||0)+sets;
     }
   }
   return {items:chosen,used:budgetMin-left};
@@ -633,6 +682,7 @@ const Timer={
   end:0,iv:null,buzzed:0,
   start(sec){this.end=Date.now()+sec*1000;this.onEnd=null;const el=document.getElementById('timer');
     el.classList.add('on');el.classList.remove('fin');
+    ALARM.unlock();keepAwake(true);
     clearInterval(this.iv);this.iv=setInterval(()=>this.tick(),250);this.tick()},
   add(s){if(!this.iv)return;this.end+=s*1000;this.tick()},
   tick(){let r=Math.round((this.end-Date.now())/1000);const el=document.getElementById('timer');
@@ -643,6 +693,7 @@ const Timer={
     document.getElementById('timerT').textContent=`${Math.floor(r/60)}:${String(r%60).padStart(2,'0')}`;
     if(r<=-20)this.stop()},
   stop(){clearInterval(this.iv);this.iv=null;this.buzzed=0;this.onEnd=null;
+    ALARM.stop();keepAwake(false);
     document.getElementById('timer').classList.remove('on')}
 };
 /* プランクなど時間種目の計測。
@@ -659,10 +710,101 @@ function startSetTimer(exId,i){
   };
   toast(`${secLabel(sec)} 計測中。終わったら自動で ✓ が付きます`);
 }
-function beep(){try{const c=new(window.AudioContext||window.webkitAudioContext)();const o=c.createOscillator(),g=c.createGain();
-  o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.setValueAtTime(.001,c.currentTime);
-  g.gain.exponentialRampToValueAtTime(.25,c.currentTime+.02);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.5);
-  o.start();o.stop(c.currentTime+.5)}catch(e){}}
+/* ================= 終了アラーム =================
+   ジムでは「ピッ」1回では気づけないので、気づくまで鳴らし続ける方式。
+
+   ・Web Audio で鳴らす。iOSではメディア音（<audio>）と違って再生権を奪わないので、
+     バックグラウンドの音楽やポッドキャストを止めずに、上に重ねて鳴る。
+     （2026-07-30に<audio>方式から変更。<audio>だと音楽が完全停止し、復帰も手動だったため）
+   ・そのかわりマナーモード（消音スイッチ）では鳴らない場合がある。
+     音楽を再生しながらなら消音スイッチに関係なく重なって鳴る。
+   ・iOSは「一度もタップされていないページ」では音を出せないので、
+     最初のタップで AudioContext を起こしておく（unlock）
+   ・鳴っている間に画面のどこかを触れば止まる */
+const ALARM={
+  _ac:null,master:null,ringing:false,stopT:null,vibT:null,
+  /* 何秒鳴らすか。off=鳴らさない。
+     旧設定「1回(short)」は廃止した（短くて気づけない、が作り直しの理由だったため）。
+     選んでいた人は6秒に読み替える */
+  SECS:{off:0,normal:6,loud:20},
+  level(){const v=CF.alarm||'loud';return v==='short'?'normal':v},
+
+  ctx(){
+    const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;
+    if(!this._ac)this._ac=new C();
+    if(this._ac.state==='suspended')this._ac.resume().catch(()=>{});
+    return this._ac;
+  },
+  /* 最初のタップで呼ぶ。AudioContextはタップ起点でしか始動できないため */
+  unlock(){this.ctx()},
+
+  /* 「ピッ ピッ ピッ …」（0.9秒周期）を secs 秒ぶん先までまとめて予約する。
+     スマホのスピーカーは1〜3kHzがいちばんよく鳴るので、その帯域＋倍音 */
+  play(sec){
+    const secs=sec!=null?sec:this.SECS[this.level()];
+    if(!secs)return;
+    this.stop();
+    const c=this.ctx();if(!c)return;
+    const g=c.createGain();g.connect(c.destination);
+    this.master=g;
+    const beep=(t,f)=>{
+      for(const[m,amp]of[[1,.5],[2,.22],[3,.09]]){
+        const o=c.createOscillator(),og=c.createGain();
+        o.frequency.value=f*m;o.connect(og);og.connect(g);
+        og.gain.setValueAtTime(.0001,t);
+        og.gain.exponentialRampToValueAtTime(amp,t+.012);
+        og.gain.setValueAtTime(amp,t+.11);
+        og.gain.exponentialRampToValueAtTime(.0001,t+.15);
+        o.start(t);o.stop(t+.16);
+      }
+    };
+    const t0=c.currentTime+.03;
+    for(let i=0;i<Math.ceil(secs/.9);i++){
+      const t=t0+i*.9;
+      beep(t,1175);beep(t+.17,1568);beep(t+.34,1175);
+    }
+    this.ringing=true;
+    if(navigator.vibrate){navigator.vibrate([250,120,250]);
+      this.vibT=setInterval(()=>navigator.vibrate([250,120,250]),900)}
+    this.stopT=setTimeout(()=>this.stop(),secs*1000+150);
+  },
+  stop(){
+    clearTimeout(this.stopT);clearInterval(this.vibT);this.stopT=this.vibT=null;
+    /* 予約済みの音はマスターの線を抜いてまとめて黙らせる */
+    if(this.master){try{this.master.disconnect()}catch(e){}this.master=null}
+    if(this.ringing&&navigator.vibrate)navigator.vibrate(0);
+    this.ringing=false;
+  },
+  /* 設定タブの「鳴らしてみる」。どの設定でも約3秒鳴らす */
+  test(){
+    if(this.level()==='off'){toast('いまは「鳴らさない」に設定されています');return}
+    this.unlock();this.play(3);
+    toast('鳴っています。画面をタップすると止まります');
+  }
+};
+/* 最初のタップでオーディオを起こす／鳴っているときはタップで止める */
+document.addEventListener('pointerdown',()=>{
+  ALARM.unlock();
+  if(ALARM.ringing)ALARM.stop();
+},{passive:true});
+function beep(){ALARM.play()}
+
+/* インターバル中に画面が消えると、タイマーもアラームも止まってしまう。
+   対応している端末では画面を点けたままにする（対応していなければ何もしない） */
+let WAKE=null;
+async function keepAwake(on){
+  try{
+    if(on){
+      if(!navigator.wakeLock||WAKE)return;
+      WAKE=await navigator.wakeLock.request('screen');
+      WAKE.addEventListener('release',()=>{WAKE=null});
+    }else if(WAKE){const w=WAKE;WAKE=null;await w.release()}
+  }catch(e){WAKE=null}
+}
+/* 画面を戻したときに取り直す（iOSはバックグラウンドで解除される） */
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&Timer.iv)keepAwake(true);
+});
 
 /* シートの開閉。
    ホーム画面から起動するとブラウザの戻るボタンが無いので、
@@ -718,13 +860,16 @@ function figSVG(key){
   if(F.eq==='topbar')fixed+=`<line class="eq" x1="44" y1="30" x2="156" y2="30"/>`;
   if(F.eq==='dipbars')fixed+=`<line class="eq" x1="78" y1="72" x2="138" y2="72"/>`;
   return `<svg viewBox="0 0 200 152" aria-hidden="true">
-    <defs><marker id="ah" markerWidth="7" markerHeight="7" refX="4" refY="3.5" orient="auto"><path d="M0 0 L7 3.5 L0 7 z" fill="#38d39f"/></marker></defs>
+    <defs><marker id="ah" markerWidth="7" markerHeight="7" refX="4" refY="3.5" orient="auto"><path d="M0 0 L7 3.5 L0 7 z" fill="var(--ok)"/></marker></defs>
     ${fixed}
     <g class="${F.hold?'':'f1'}">${inner(F.A)}</g>
     <g class="${F.hold?'':'f2'}">${inner(F.B)}</g>
     ${F.arrow?`<line class="ar" x1="${F.arrow[0]}" y1="${F.arrow[1]}" x2="${F.arrow[2]}" y2="${F.arrow[3]}"/>`:''}
   </svg>`;
 }
+/* ジムでの表示名・別の呼び方。data.js の ALIAS に無ければ空 */
+const aliasOf=name=>(typeof ALIAS!=='undefined'&&ALIAS[name])||[];
+
 function showGuide(name){
   const g=GUIDE[name],ex=exByName(name);
   const yt=`https://www.youtube.com/results?search_query=${encodeURIComponent(name+' フォーム 解説')}`;
@@ -732,8 +877,11 @@ function showGuide(name){
   if(!g){
     h+=`<div class="card"><div class="sub">この種目の解説はまだ用意されていません。動画で確認できます。</div></div>`;
   }else{
-    h+=`<div class="figbox"><img alt="${esc(name)}" src="img/${encodeURIComponent(name)}.png" style="width:100%;max-width:280px;display:block;margin:0 auto;border-radius:10px" onerror="this.style.display='none';this.parentElement.querySelector('.figfb').style.display='block'"><div class="figfb" style="display:none">${figSVG(g.fig)}<div class="sub" style="text-align:center;padding:0 0 6px;font-size:11.5px">薄い方が開始位置／濃い方がフィニッシュ</div></div></div>
-      <div class="card" style="padding:11px 13px"><span class="tag a">効く場所</span> <span style="font-size:13.5px">${esc(g.aim)}</span></div>
+    const im=`img/${encodeURIComponent(name)}`;
+    h+=`<div class="figbox"><div class="figwrap"><img class="figA" alt="${esc(name)}" src="${im}.png" onerror="this.closest('.figbox').querySelector('.figwrap').style.display='none';this.closest('.figbox').querySelector('.figfb').style.display='block'"><img class="figB" alt="" src="${im}_2.png" onload="this.closest('.figwrap').classList.add('two');this.closest('.figbox').querySelector('.figcap').style.display='block'" onerror="this.remove()"></div><div class="figcap sub" style="display:none">開始 ↔ フィニッシュ</div><div class="figfb" style="display:none">${figSVG(g.fig)}<div class="sub" style="text-align:center;padding:0 0 6px;font-size:11.5px">薄い方が開始位置／濃い方がフィニッシュ</div></div></div>
+      <div class="card" style="padding:11px 13px"><span class="tag a">効く場所</span> <span style="font-size:13.5px">${esc(g.aim)}</span>
+        ${aliasOf(name).length?`<div style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px">
+          <span class="tag">ジムの表示</span> <span class="sub" style="font-size:12.5px">${esc(aliasOf(name).join(' ／ '))}</span></div>`:''}</div>
       <h2 class="sec">手順</h2><ol class="steps">${g.steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol>
       <h2 class="sec">コツ</h2><ul class="bullets">${g.tips.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>
       <h2 class="sec">やりがちなNG</h2><ul class="bullets ng">${g.ng.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`;
@@ -868,6 +1016,195 @@ function render(toTop){
   window.scrollTo(0,y);
 }
 
+/* ================= 今日のひとこと =================
+   アプリを開くたびに、記録から拾った「経過報告」と「ワンポイント」を記録タブの先頭に出す。
+   ジムから足が遠のいているときは、見出しを背中を押す文面に切り替える。
+   毎回同じだと読まなくなるので、日付で中身が回るようにしている（「別のを見る」で手動送りも可）。 */
+const dayNum=()=>Math.floor(dObj(todayStr()).getTime()/86400000);
+const rotN=()=>dayNum()+(CF.tipShift||0);
+
+/* 実際にやった日（完了セットが1つ以上ある日）を新しい順で。未来日は数えない */
+function doneDays(){
+  const t=todayStr();
+  return WO.filter(w=>w.date<=t&&w.entries.some(en=>en.sets.some(s=>s.done)));
+}
+const partsDone=w=>[...new Set(w.entries
+  .filter(en=>en.sets.some(s=>s.done))
+  .map(en=>(exById(en.exerciseId)||{}).part).filter(Boolean))];
+
+/* 週1回以上が何週つづいているか。今週まだでも、先週まで続いていれば継続とみなす */
+function weekStreak(){
+  let n=0;
+  for(let i=0;i<104;i++){
+    const b=new Date();b.setHours(0,0,0,0);b.setDate(b.getDate()-b.getDay()-i*7);
+    const e=new Date(b);e.setDate(e.getDate()+7);
+    const from=dstr(b),to=dstr(e);
+    const has=WO.some(w=>w.date>=from&&w.date<to&&w.entries.some(s0=>s0.sets.some(s=>s.done)));
+    if(has)n++;else if(i>0)break;
+  }
+  return n;
+}
+
+/* 経過報告でコケても、カード自体（見出しとワンポイント）は出るようにする */
+function progressFacts(){
+  try{return progressFactsBody()}catch(e){console.error('progressFacts で例外',e);return []}
+}
+/* 記録から「今言えること」を集める。良い知らせほど前に来る。
+   数字は <b> で強調して返すので、埋め込む名前だけ esc() すること */
+function progressFactsBody(){
+  const t=todayStr(),done=doneDays(),out=[];
+  if(!done.length)return out;
+  const since=dstr(new Date(dObj(t).getTime()-6*86400000));   // 直近7日
+
+  /* 直近7日に更新した自己ベスト。初回記録は「更新」に数えない（2回以上やった種目だけ） */
+  const ids=new Set();
+  for(const w of done)if(w.date>=since)for(const en of w.entries)ids.add(en.exerciseId);
+  const prs=[];
+  for(const id of ids){
+    const ex=exById(id);if(!ex)continue;
+    if(done.filter(w=>w.entries.some(en=>en.exerciseId===id&&en.sets.some(s=>s.done))).length<2)continue;
+    const b=bestSet(id);
+    if(b&&b.date>=since)prs.push(`${esc(ex.name)} ${esc(bestLabel(ex,b))}`);
+  }
+  if(prs.length)out.push({i:'🎉',t:`この7日で自己ベスト更新 <b>${prs.slice(0,2).join('・')}</b>${
+    prs.length>2?` ほか${prs.length-2}種目`:''}`});
+
+  /* 推定1RMがいちばん伸びている種目 */
+  let g=null;
+  for(const id of ids){
+    const ex=exById(id);if(!ex||ex.unit!=='kg')continue;
+    const s=rmSeries(id);if(s.length<2)continue;
+    const now=s[s.length-1];
+    const old=s.filter(p=>daysBetween(p.d,now.d)>=21).pop()||s[0];
+    if(old.d===now.d)continue;
+    const d=now.v-old.v;
+    if(d>=1&&(!g||d>g.d))g={name:ex.name,d,days:daysBetween(old.d,now.d),v:now.v};
+  }
+  if(g)out.push({i:'📈',t:`${esc(g.name)}の推定1RMはこの${g.days}日で <b>+${g.d.toFixed(1)}${CF.unit}</b>（いま約${Math.round(g.v)}${CF.unit}）`});
+
+  /* 今月の回数を、先月の同じ日までと比べる */
+  const day=+t.slice(8);
+  let[py,pm]=t.split('-').map(Number);pm--;if(pm===0){pm=12;py--}
+  const pym=`${py}-${String(pm).padStart(2,'0')}`;
+  const thisM=done.filter(w=>w.date.slice(0,7)===t.slice(0,7)).length;
+  const prevM=done.filter(w=>w.date.slice(0,7)===pym&&+w.date.slice(8)<=day).length;
+  if(thisM||prevM)out.push({i:'📅',t:`今月は <b>${thisM}回</b>。先月の同じ日までは${prevM}回でした${
+    thisM>prevM?'（いいペースです）':''}`});
+
+  /* 今週のセット数と、いちばん多い部位 */
+  const wk=weekSets(0).m;
+  const cnt=PARTS.filter(p=>p!=='有酸素');
+  const wkTotal=cnt.reduce((a,p)=>a+wk[p],0);
+  if(wkTotal){
+    const top=cnt.slice().sort((a,b)=>wk[b]-wk[a])[0];
+    out.push({i:'🔥',t:`今週はここまで <b>${wkTotal}セット</b>${wk[top]?`（いちばん多いのは${esc(top)}の${wk[top]}セット）`:''}`});
+  }
+
+  /* 週1回以上を何週つづけているか */
+  const ws=weekStreak();
+  if(ws>=2)out.push({i:'🗓',t:`週1回以上が <b>${ws}週つづいて</b>います`});
+
+  /* 通算の節目が近いとき */
+  const marks=[10,20,30,50,75,100,150,200,300,365,500];
+  const nx=marks.find(m=>m>done.length);
+  if(nx&&nx-done.length<=3)out.push({i:'🏅',t:`通算${done.length}回。あと <b>${nx-done.length}回</b>で${nx}回です`});
+
+  /* これまでに持ち上げた総重量 */
+  const vol=done.reduce((a,w)=>a+volume(w),0);
+  if(vol>=1000)out.push({i:'🏋️',t:`これまでに持ち上げた合計は <b>${(vol/1000).toFixed(1)}t</b>（通算${done.length}回ぶん）`});
+
+  /* 体重の3週間前くらいとの差 */
+  const wts=wtSorted();
+  if(wts.length>=2){
+    const now=wts[wts.length-1];
+    const base=wts.filter(x=>daysBetween(x.d,now.d)>=21).pop()||wts[0];
+    const d=now.w-base.w;
+    if(base.d!==now.d&&Math.abs(d)>=0.5)
+      out.push({i:'⚖️',t:`体重はこの${daysBetween(base.d,now.d)}日で <b>${d>0?'+':''}${d.toFixed(1)}kg</b>（いま${now.w.toFixed(1)}kg）`});
+  }
+
+  /* 今週のウォーキング */
+  const wm=walkWeekMin();
+  if(wm>=30){
+    const st=walkStreak();
+    out.push({i:'🚶',t:`今週のウォーキングは <b>${wm}分</b>・約 <b>${walkWeekKcal()}kcal</b>${st>=3?`・${st}日連続`:''}`});
+  }
+  /* 歩いて減らしたぶんが積み上がっているのが見えると続きます */
+  const wtk=walkTotalKcal();
+  if(wtk>=2000)out.push({i:'🔥',t:`歩いて減らした合計は <b>${wtk.toLocaleString()}kcal</b>（脂肪 約${kcalFat(wtk).toFixed(1)}kg ぶん）`});
+  return out;
+}
+
+function tipOfDay(){
+  const n=((rotN()%TIPS.length)+TIPS.length)%TIPS.length;
+  return TIPS[n];
+}
+function nextTip(){CF.tipShift=(CF.tipShift||0)+1;saveCF();render()}
+
+/* このカードで何かあっても、記録タブ自体は必ず開けるようにする。
+   （data.js だけ古いキャッシュが残って TIPS が無い、想定外の記録が入っている、など） */
+function dailyCard(date){
+  try{
+    if(typeof TIPS==='undefined'||typeof COMEBACK==='undefined')return '';
+    return dailyCardBody(date);
+  }catch(e){
+    console.error('dailyCard で例外',e);
+    return '';
+  }
+}
+function dailyCardBody(date){
+  if(date!==todayStr())return '';
+  const done=doneDays(),w=getWorkout(date);
+  const last=done.find(x=>x.date<date);
+  const gap=last?daysBetween(last.date,date):null;
+  const todaySets=w?w.entries.reduce((a,en)=>a+en.sets.filter(s=>s.done).length,0):0;
+
+  let push=false,head,lead='';
+  if(!done.length){
+    head='ようこそ。ここから始めましょう';
+    lead='1回でも記録すると、次からここに経過報告が出るようになります。';
+  }else if(w&&w.finished){
+    head='今日はもう完了しています';
+    /* REST_TIPSの文は下の部位バナー（休養日）にも出るので、ここでは使わない（同じ文が2回並ぶ） */
+    lead='お疲れさまでした。今日の内容は下の「まとめ」から見返せます。';
+  }else if(todaySets){
+    head=`今日はここまで <em>${todaySets}セット</em>`;
+    lead='この調子で。終わったら下の「完了する」を押してください。';
+  }else if(gap>=4){
+    push=true;
+    head=`前回のトレから <em>${gap}日</em> 空いています`;
+    /* 空いた日数が長いほど後ろの文面から始め、そこから日替わりでずらす */
+    lead=COMEBACK[((gap>=14?3:gap>=7?2:0)+(rotN()%3))%COMEBACK.length];
+    /* 始めるボタンは置かない。すぐ下の「今日は◯◯の日」バナーが同じ役目をしていて、
+       同じ画面に同じボタンが2つあると迷うため */
+  }else{
+    /* ふだんの日。あいさつより前回の情報のほうが役に立つので、そちらを見出しにする。
+       gapはここでは1〜3日（4日以上は上の「久しぶり」分岐に入る） */
+    const pd=partsDone(last);
+    head=`前回は${fmtD(last.date)}${pd.length?`の<em style="color:var(--accent)">${esc(pd.join('・'))}</em>`:''}`;
+    lead=gap===1?'昨日に続けて。いい流れです。':`${gap}日空き。ちょうど回復できた頃です。`;
+  }
+
+  const facts=progressFacts();
+  let show=[];
+  if(facts.length){
+    show=[facts[0]];
+    if(facts.length>1)show.push(facts[1+(rotN()%(facts.length-1))]);
+  }
+  const tip=tipOfDay();
+  /* 日付はヘッダー右上に出ているので、カードには載せない（二重表示になる） */
+  return `<div class="daily${push?' push':''}">
+    <div class="hd">${head}</div>
+    ${lead?`<div class="lead">${lead}</div>`:''}
+    ${show.map(f=>`<div class="fact"><span>${f.i}</span><span class="grow">${f.t}</span></div>`).join('')}
+    <div class="tip">
+      <div class="row"><span class="cat">今日のワンポイント・${esc(tip.c)}</span>
+        <button class="howto" style="margin-left:auto" onclick="nextTip()">別のを見る</button></div>
+      <p>${esc(tip.t)}</p>
+    </div>
+  </div>`;
+}
+
 /* ================= 記録 ================= */
 function viewLog(){
   const date=VIEW_DATE,w=getWorkout(date),isToday=date===todayStr();
@@ -875,6 +1212,9 @@ function viewLog(){
   let h=`<header><h1>${isToday?'今日のトレーニング':fmtD(date)}</h1>
     <div class="meta">${isToday?fmtD(date):''}</div>
     <button class="qbtn" onclick="showHelp()" title="使い方">?</button></header>`;
+
+  /* 今日のひとこと（経過報告＋ワンポイント）。今日を見ているときだけ先頭に出す */
+  h+=dailyCard(date);
 
   h+=`<div class="today${rest?' rest':''}">
     <div class="row"><div class="grow">
@@ -1118,8 +1458,10 @@ function pickExercise(){
     h+=`<div class="pk"><h2 class="sec">${esc(p)}${parts.includes(p)?' ・今日の部位':''}</h2>`;
     for(const e of list){
       const b=bestSet(e.id);
-      h+=`<div class="pickitem pk-i" data-n="${esc(e.name)}">
+      const al=aliasOf(e.name);
+      h+=`<div class="pickitem pk-i" data-n="${esc(e.name)}" data-a="${esc(al.join(' '))}">
         <div class="grow" style="min-width:0"><div class="trunc">${esc(e.name)}</div>
+        ${al.length?`<div class="sub trunc" style="font-size:11px;opacity:.85">${esc(al.slice(0,2).join(' ／ '))}</div>`:''}
         ${b?`<div class="sub" style="font-size:11.5px">自己ベスト ${bestLabel(e,b)}</div>`:''}</div>
         <button class="howto" onclick="showGuide('${esc(e.name)}')">やり方</button>
         <button class="btn sm" onclick="addEntry('${e.id}')" ${used.includes(e.id)?'disabled style="opacity:.35"':''}>追加</button></div>`;
@@ -1128,9 +1470,14 @@ function pickExercise(){
   }
   Sheet.open(h+`</div>`);
 }
+/* 「スミスマシーン」と打っても「スミスマシン」が出るように、
+   伸ばし棒・中黒・空白を無視して比べる */
+const normName=s=>String(s).replace(/[ー―‐・\s]/g,'').toLowerCase();
 function filterPick(q){
-  q=q.trim();
-  document.querySelectorAll('#picklist .pk-i').forEach(el=>{el.style.display=!q||el.dataset.n.includes(q)?'':'none'});
+  q=normName(q.trim());
+  document.querySelectorAll('#picklist .pk-i').forEach(el=>{
+    const hit=!q||normName(el.dataset.n).includes(q)||normName(el.dataset.a||'').includes(q);
+    el.style.display=hit?'':'none'});
   document.querySelectorAll('#picklist .pk').forEach(g=>{g.style.display=[...g.querySelectorAll('.pk-i')].some(i=>i.style.display!=='none')?'':'none'});
 }
 
@@ -1396,13 +1743,59 @@ function walkWeekMin(){
   for(const x of walkSorted())if(x.d>=from)m+=x.min;
   return m;
 }
+
+/* ---- 消費カロリー ----
+   METs法： kcal ＝ METs × 体重kg × 時間h × 1.05
+   距離を入れていれば「速さ」からMETsを決める。無ければ、ふつうの朝散歩にあたる 3.5 とみなす。
+   あくまで目安の数字です（同じ距離でも体重と速さで実際はかなり変わります）。 */
+const WALK_MET=[[3.2,2.0],[4.0,2.8],[4.8,3.0],[5.6,3.5],[6.4,4.3],[7.2,5.0],[8.0,6.3]];
+function walkMet(min,km){
+  if(!min||!km)return 3.5;
+  const kmh=km/(min/60);
+  for(const [lim,met] of WALK_MET)if(kmh<lim)return met;
+  return 8.0;   // 8km/h超はもう小走りの領域
+}
+/* その日の体重。記録があればその日以前の最新のもの、1つも無ければ 60kg を仮に使う */
+function bodyWAt(date){
+  const a=wtSorted();
+  if(!a.length)return 60;
+  const p=a.filter(x=>x.d<=date);
+  return (p.length?p[p.length-1]:a[0]).w;
+}
+const hasBodyW=()=>wtSorted().length>0;
+function walkKcal(min,km,date){
+  if(!min||min<=0)return 0;
+  return Math.round(walkMet(min,km)*bodyWAt(date||todayStr())*(min/60)*1.05);
+}
+/* 歩数の目安。距離があれば歩幅70cm、無ければ速歩きの毎分110歩で見積もる */
+const walkSteps=(min,km)=>Math.round(km?km*1000/0.7:min*110);
+/* 脂肪1kg ≒ 7200kcal */
+const kcalFat=k=>k/7200;
+const walkWeekKcal=()=>{
+  const b=new Date();b.setHours(0,0,0,0);b.setDate(b.getDate()-b.getDay());
+  const from=dstr(b);let k=0;
+  for(const x of walkSorted())if(x.d>=from)k+=walkKcal(x.min,x.km,x.d);
+  return k;
+};
+const walkTotalKcal=()=>walkSorted().reduce((a,x)=>a+walkKcal(x.min,x.km,x.d),0);
 /* 記録タブのカード。今日ぶんの入力＋今週合計＋連続日数＋直近の記録 */
+let WALK_OPEN=false;   // 記録済みのとき、畳んだカードを開いているか
 function walkCard(date){
   if(date!==todayStr())return '';   // 今日を見ているときだけ
   const cur=WALK[todayStr()],all=walkSorted();
   const st=walkStreak(),wk=walkWeekMin();
   const last=all.slice(-1)[0];
   const ph=cur?cur.min:(last?last.min:'');
+  /* 今日ぶんを記録済みなら1行に畳む。直したいときだけタップで開く */
+  if(cur&&!WALK_OPEN){
+    const kc=walkKcal(cur.min,cur.km);
+    return `<div class="card row" style="cursor:pointer" onclick="WALK_OPEN=true;render()">
+      <span class="grow" style="font-size:13.5px">🚶 朝ウォーキング <b>${cur.min}分</b>${cur.km?` / ${cur.km}km`:''}
+        <span style="color:var(--accent);font-weight:600"> 約${kc}kcal</span>
+        <span style="color:var(--ok)"> ✓</span></span>
+      <span class="sub" style="font-size:11.5px">今週${wk}分</span>
+      <span class="sub">›</span></div>`;
+  }
   let h=`<div class="card"${cur?'':' style="border:1px solid var(--accent)"'}>
     <div class="row" style="margin-bottom:9px">
       <div class="grow"><b>🚶 朝ウォーキング</b>
@@ -1411,7 +1804,8 @@ function walkCard(date){
             :st?`${st}日連続。今日で${st+1}日目です`:'今日の歩いた時間を記録できます'}</div>
       </div>
       ${(st||wk)?`<div style="text-align:right"><div class="sub" style="font-size:11px">今週</div>
-        <b style="font-variant-numeric:tabular-nums">${wk}<span class="sub" style="font-size:11px">分</span></b></div>`:''}
+        <b style="font-variant-numeric:tabular-nums">${wk}<span class="sub" style="font-size:11px">分</span></b>
+        <div class="sub" style="font-size:11px;font-variant-numeric:tabular-nums">${walkWeekKcal()}kcal</div></div>`:''}
     </div>
     <div class="row" style="gap:8px">
       <button class="howto" onclick="walkStep(-5)">−5</button>
@@ -1424,23 +1818,54 @@ function walkCard(date){
     <div class="row" style="gap:8px;margin-top:8px">
       <input id="walkKm" type="text" inputmode="decimal" enterkeyhint="done" class="grow"
         placeholder="距離 km（任意）" value="${cur&&cur.km?cur.km:''}" oninput="walkCleanKm(this)">
-    </div>`;
+    </div>
+    <div id="walkCalc" style="margin-top:9px">${walkCalcHTML(cur?cur.min:0,cur&&cur.km?cur.km:null)}</div>`;
   if(all.length){
     h+=`<div class="sub" style="font-size:11px;margin:11px 0 3px">最近の記録</div>`;
     for(const x of all.slice().reverse().slice(0,5)){
       h+=`<div class="row" style="padding:6px 0;border-top:1px solid var(--line);font-size:13px">
         <span class="grow">${fmtD(x.d)}${x.t?` <span class="sub">${x.t}</span>`:''}</span>
-        <span style="font-variant-numeric:tabular-nums">${x.min}分${x.km?` / ${x.km}km`:''}</span>
+        <span style="font-variant-numeric:tabular-nums">${x.min}分${x.km?` / ${x.km}km`:''}
+          <span class="sub">約${walkKcal(x.min,x.km,x.d)}kcal</span></span>
         <button class="del sub" onclick="walkDel('${x.d}')" style="font-size:16px;margin-left:8px">×</button></div>`;
     }
+    /* 積み上がっている実感が出るように、通算も出す */
+    const tk=walkTotalKcal(),fat=kcalFat(tk);
+    h+=`<div class="sub" style="font-size:11.5px;margin-top:9px;padding-top:8px;border-top:1px solid var(--line)">
+      通算 ${all.length}回・${all.reduce((a,x)=>a+x.min,0)}分・<b style="color:var(--fg)">${tk.toLocaleString()}kcal</b>
+      ${fat>=0.1?`（脂肪 約${fat.toFixed(1)}kg ぶん）`:''}</div>`;
   }
   return h+`</div>`;
 }
-function walkClean(el){let v=el.value.replace(/[^\d]/g,'');if(v!==el.value)el.value=v}
+/* 入力中の数字から、その場で消費カロリーを出して見せる部分。
+   数字が増えるのが見えるほうが続くので、保存前から更新する。 */
+function walkCalcHTML(min,km){
+  if(!min||min<=0)return `<div class="sub" style="font-size:11.5px">時間を入れると消費カロリーの目安が出ます</div>`;
+  const kc=walkKcal(min,km),steps=walkSteps(min,km);
+  return `<div class="row" style="gap:10px;background:var(--card2);border-radius:11px;padding:9px 12px">
+      <div class="grow">
+        <span style="font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent)">${kc}</span>
+        <span class="sub" style="font-size:12px"> kcal</span>
+        <span class="sub" style="font-size:11.5px">　約${steps.toLocaleString()}歩${km?`　${(km/(min/60)).toFixed(1)}km/h`:''}</span>
+      </div>
+    </div>
+    <div class="sub" style="font-size:11px;margin-top:5px">
+      ${hasBodyW()?`体重${bodyWAt(todayStr()).toFixed(1)}kgで計算`:'体重が未記録なので60kgで仮計算しています'}${km?'':'・速さは「ふつうの朝散歩」とみなした目安'}
+    </div>`;
+}
+/* 分・kmのどちらを触っても、その場で計算し直す */
+function walkCalcRefresh(){
+  const box=document.getElementById('walkCalc');if(!box)return;
+  /* 実際に保存される値だけで計算する（空欄なら placeholder は使わない） */
+  const min=+document.getElementById('walkMin').value||0;
+  const km=+document.getElementById('walkKm').value||null;
+  box.innerHTML=walkCalcHTML(min,km);
+}
+function walkClean(el){let v=el.value.replace(/[^\d]/g,'');if(v!==el.value)el.value=v;walkCalcRefresh()}
 function walkCleanKm(el){let v=el.value.replace(/[^\d.]/g,'');const p=v.split('.');
-  if(p.length>2)v=p[0]+'.'+p.slice(1).join('');if(v!==el.value)el.value=v}
+  if(p.length>2)v=p[0]+'.'+p.slice(1).join('');if(v!==el.value)el.value=v;walkCalcRefresh()}
 function walkStep(d){const el=document.getElementById('walkMin');
-  el.value=Math.max(0,(+el.value||+el.placeholder||20)+d)}
+  el.value=Math.max(0,(+el.value||+el.placeholder||20)+d);walkCalcRefresh()}
 function walkSave(){
   const min=+document.getElementById('walkMin').value;
   if(!min||min<=0||min>600){alert('歩いた時間（分）を入れてください');return}
@@ -1449,8 +1874,8 @@ function walkSave(){
   WALK[todayStr()]={min,t:(prev&&prev.t)||nowHM()};
   if(km&&+km>0)WALK[todayStr()].km=+km;
   saveWALK();
-  const st=walkStreak();
-  toast(st>1?`ウォーキングを記録しました 🎉 ${st}日連続`:'ウォーキングを記録しました');
+  const st=walkStreak(),kc=walkKcal(min,km&&+km>0?+km:null);
+  toast(`🔥 約${kc}kcal 消費${st>1?` 🎉 ${st}日連続`:''}`);
   render();
 }
 function walkDel(d){if(!confirm(fmtD(d)+' のウォーキングを削除しますか？'))return;
@@ -1542,11 +1967,6 @@ const METS_STRENGTH=5.0;
 const MAX_SESSION_MIN=240;
 const METS_CARDIO={'ランニング':9.8,'ウォーキング':3.5,'エアロバイク':7.0,
   'ローイングマシン':7.0,'クロストレーナー':5.0,'縄跳び':12.3};
-const metsWalk=(min,km)=>{
-  if(!km||!min)return 3.5;
-  const kmh=km/(min/60);
-  return kmh<4?2.8:kmh<5.5?3.5:kmh<6.5?5.0:7.0;
-};
 const metsKcal=(mets,kg,min)=>mets*kg*(min/60)*1.05;
 
 /* 体重タブの最新の記録を使う。体重が無いと何も計算できない */
@@ -1577,8 +1997,9 @@ function bmrInfo(){
    だいたいの拘束時間を出す。開始〜終了が記録されていればそちらを優先します */
 function workoutBurn(date){
   const out={kcal:0,strMin:0,cardioMin:0};
-  const kg=bodyKg(),w=WO.find(x=>x.date===date);
-  if(!kg||!w)return out;
+  const w=WO.find(x=>x.date===date);
+  if(!hasBodyW()||!w)return out;
+  const kg=bodyWAt(date);
   let strSec=0;
   for(const en of w.entries){
     const ex=exById(en.exerciseId);if(!ex)continue;
@@ -1603,11 +2024,12 @@ function workoutBurn(date){
   out.kcal=Math.round(out.kcal+metsKcal(METS_STRENGTH,kg,strMin));
   return out;
 }
+/* ウォーキングの消費は体重タブと同じ計算（walkKcal）を使う。
+   2か所で別々に出すと、同じ日なのに違う数字が並んでしまうため */
 function walkBurn(date){
-  const kg=bodyKg(),x=WALK[date];
-  if(!kg||!x||!(+x.min>0))return{kcal:0,min:0};
-  const min=+x.min,km=+x.km||0;
-  return{kcal:Math.round(metsKcal(metsWalk(min,km),kg,min)),min};
+  const x=WALK[date];
+  if(!hasBodyW()||!x||!(+x.min>0))return{kcal:0,min:0};
+  return{kcal:walkKcal(+x.min,+x.km||null,date),min:+x.min};
 }
 
 /* その日の消費カロリー（推定）。
@@ -2205,75 +2627,51 @@ function delEx(id){
 }
 
 /* ================= 設定 ================= */
-/* ================= 設定 =================
-   項目が増えて縦に長くなったので、見出しごとに折りたたむ。
-   閉じているときも、見出しの右に今の設定値を出して、開かなくても分かるようにしている。
-   開閉の状態は保存されるので、よく触る項目は開いたままにしておけます */
-const setIsOpen=k=>!!(CF.setOpen&&CF.setOpen[k]);
-function setToggle(k){
-  if(!CF.setOpen)CF.setOpen={};
-  CF.setOpen[k]=!CF.setOpen[k];
-  saveCF();render();   // スクロール位置は保たれます
-}
-function setAllFold(open){
-  CF.setOpen={};
-  if(open)for(const k of SET_SECTIONS)CF.setOpen[k]=true;
-  saveCF();render(true);
-}
-const SET_SECTIONS=['routine','duration','rest','train','meal','data','update'];
-function acc(k,title,summary,body){
-  const on=setIsOpen(k);
-  return `<div class="acc${on?' on':''}">
-    <button class="acc-h" onclick="setToggle('${k}')" aria-expanded="${on}">
-      <span class="acc-t">${title}</span>
-      <span class="acc-s">${summary||''}</span>
-      <span class="acc-x">›</span></button>
-    <div class="acc-b">${body}</div></div>`;
+/* 設定タブは項目が多いので折りたたみ式。開いた項目は覚えておく（タブを離れても同セッション中は維持） */
+let SET_OPEN={};
+function foldSec(id,title,summary,inner){
+  const open=!!SET_OPEN[id];
+  return `<div class="card" style="padding:0;overflow:hidden">
+    <button class="row" style="width:100%;padding:13px;text-align:left"
+      onclick="SET_OPEN['${id}']=${open?'false':'true'};render()">
+      <span class="grow" style="min-width:0"><b style="font-size:14.5px">${title}</b>
+        ${!open&&summary?`<span class="sub" style="margin-left:7px;font-size:12px">${summary}</span>`:''}</span>
+      <span class="sub" style="font-size:15px;transform:rotate(${open?'90deg':'0'});transition:.15s">›</span></button>
+    ${open?`<div style="padding:2px 13px 13px">${inner}</div>`:''}
+  </div>`;
 }
 function viewSet(){
+  setTimeout(pushRefresh,0);   // 描画後に通知の状態を書き込む（畳まれていれば何もしない）
   const W=['日','月','火','水','木','金','土'],today=new Date().getDay();
-  const openN=SET_SECTIONS.filter(setIsOpen).length;
-  const presetName=Object.keys(PRESETS).find(k=>PRESETS[k].join()===CF.routine.join());
-  const trainDays=CF.routine.filter(v=>v!=='休み').length;
-  return `<header><h1>設定</h1>
-    <button class="meta" onclick="setAllFold(${openN?'false':'true'})"
-      style="color:var(--sub)">${openN?'すべて閉じる':'すべて開く'}</button></header>
-  <div class="card"><button class="btn ghost" onclick="showHelp()">使い方と用語を見る</button></div>
-  <div class="card"><button class="btn ghost" onclick="go('ex')">
-    <span class="row" style="justify-content:center;gap:6px">種目の管理（${EX.length}件）<span class="sub" style="font-size:15px">›</span></span></button>
-    <div class="sub" style="margin-top:8px;font-size:11.5px">種目の追加・削除、種目ごとの記録と推定1RMの確認</div></div>
+  let h=`<header><h1>設定</h1></header>
+  <div class="card row" style="gap:10px">
+    <button class="btn ghost sm grow" onclick="showHelp()">使い方と用語</button>
+    <button class="btn ghost sm grow" onclick="go('ex')">種目の管理（${EX.length}）›</button>
+  </div>`;
 
-  ${acc('routine','曜日ごとの部位',`${presetName?esc(presetName):'自分で設定'}・週${trainDays}日`,`
-  <div class="card">
+  h+=foldSec('routine','曜日ごとの部位',`今日は${esc(partLabel(todayStr()))}`,`
     ${CF.routine.map((v,i)=>`<div class="row" style="margin-bottom:7px">
       <span style="width:44px;color:${i===today?'var(--accent)':'var(--fg)'};font-weight:${i===today?'700':'400'}">${W[i]}曜</span>
       <select onchange="CF.routine[${i}]=this.value;saveCF();render()">
         ${DAY_OPTIONS.map(o=>`<option value="${esc(o)}" ${o===v?'selected':''}>${esc(partDisp(o))}</option>`).join('')}
       </select></div>`).join('')}
-    <div class="sub" style="margin-top:9px;font-size:11.5px">記録タブの「今日は◯◯の日」に反映されます</div>
-  </div>
-  <div class="card">
-    <div class="sub" style="margin-bottom:8px">分割プリセットから選ぶ</div>
+    <div class="sub" style="margin:9px 0;font-size:11.5px">記録タブの「今日は◯◯の日」に反映されます</div>
+    <div class="sub" style="margin-bottom:8px;border-top:1px solid var(--line);padding-top:10px">分割プリセットから選ぶ</div>
     ${Object.keys(PRESETS).map(k=>{
       const same=PRESETS[k].join()===CF.routine.join();
       return `<button class="btn ${same?'':'ghost'} sm" style="width:100%;margin-bottom:7px" onclick="applyPreset('${esc(k)}')">${esc(k)}${same?' ✓':''}</button>`}).join('')}
     <div class="sub" style="font-size:11.5px;margin-top:4px">
       <b>PPL</b>＝Push（押す：胸・肩・三頭）／Pull（引く：背中・二頭）／Legs（脚・腹）で分ける方法。
-      同じ筋肉を続けて使わないので回復させやすく、週3回でも週6回でも組めます。</div>
-  </div>
-`)}
+      同じ筋肉を続けて使わないので回復させやすく、週3回でも週6回でも組めます。</div>`);
 
-  ${acc('duration','1回あたりの時間',CF.duration>=60?CF.duration/60+'時間':CF.duration+'分',`
-  <div class="card">
+  h+=foldSec('duration','1回あたりの時間',
+    CF.duration>=60?(CF.duration/60)+'時間':CF.duration+'分',`
     <div class="seg">${[30,45,60,90,120].map(v=>
       `<button class="${CF.duration===v?'on':''}" onclick="CF.duration=${v};saveCF();render()">${v>=60?v/60+'時間':v+'分'}</button>`).join('')}</div>
     <div class="sub" style="font-size:11.5px;margin-top:8px">
-      この時間に入るぶんだけ、おすすめメニューの種目とセット数が自動で調整されます。記録タブでも変えられます。</div>
-  </div>
-`)}
+      この時間に入るぶんだけ、おすすめメニューの種目とセット数が自動で調整されます。記録タブでも変えられます。</div>`);
 
-  ${acc('rest','インターバル（部位ごと）',CF.restBy?'変更あり':'おすすめのまま',`
-  <div class="card">
+  h+=foldSec('rest','インターバル',`脚${restFor('脚')}秒・胸${restFor('胸')}秒 など`,`
     ${PARTS.map(p=>`<div class="row" style="margin-bottom:10px"><span class="grow">${p}</span>
       <select style="width:120px" onchange="setRest('${p}',+this.value)">
         ${[0,30,45,60,90,120,150,180,240,300].map(s=>
@@ -2283,44 +2681,58 @@ function viewSet(){
       セットの ✓ を押すと、その種目の部位のインターバルでタイマーが動きます。<br>
       大きい種目ほど長く休まないと次のセットで重量が落ちます。脚・背中は長め、単関節の腕・腹は短めが目安です。
     </div>
-    <button class="btn ghost" style="margin-top:11px" onclick="resetRest()">おすすめの秒数に戻す</button>
-  </div>
-`)}
+    <button class="btn ghost" style="margin-top:11px" onclick="resetRest()">おすすめの秒数に戻す</button>`);
 
-  ${acc('train','トレーニング',`${CF.unit}${CF.goal?'・目標 '+CF.goal+'kg':''}`,`
-  <div class="card">
+  h+=foldSec('alarm','タイマーの音',
+    {off:'鳴らさない',normal:'6秒',loud:'20秒'}[ALARM.level()],`
+    <div class="seg">${[['off','鳴らさない'],['normal','6秒'],['loud','20秒']].map(([k,l])=>
+      `<button class="${ALARM.level()===k?'on':''}" onclick="CF.alarm='${k}';saveCF();render();if('${k}'!=='off')ALARM.test()">${l}</button>`).join('')}</div>
+    <div class="sub" style="font-size:11.5px;margin-top:9px">
+      インターバルが終わったら、この秒数だけ鳴り続けます。<b style="color:var(--fg)">画面のどこかを触ればすぐ止まります。</b>
+    </div>
+    <button class="btn ghost" style="margin-top:10px" onclick="ALARM.test()">鳴らしてみる</button>
+    <div class="sub" style="font-size:11.5px;margin-top:9px;border-top:1px solid var(--line);padding-top:9px">
+      ・<b style="color:var(--fg)">音楽やポッドキャストは止まりません</b>。上に重ねて鳴ります（イヤホンでもOK）<br>
+      ・音の大きさはiPhoneの<b style="color:var(--fg)">音量ボタン</b>で変えてください<br>
+      ・マナーモード（横のスイッチ）中は、何も再生していないと鳴らないことがあります<br>
+      ・タイマー中は画面が消えないようにしています。画面を消すと鳴りません
+    </div>`);
+
+  h+=foldSec('unit','単位と目標体重',`${esc(CF.unit)}${CF.goal?`・目標${esc(CF.goal)}kg`:''}`,`
     <div class="row" style="margin-bottom:10px"><span class="grow">単位</span>
       <select style="width:120px" onchange="CF.unit=this.value;saveCF();render()">
         <option value="kg" ${CF.unit==='kg'?'selected':''}>kg</option>
         <option value="lb" ${CF.unit==='lb'?'selected':''}>lb</option></select></div>
     <div class="row"><span class="grow">目標体重</span>
       <input style="width:120px;text-align:center" type="number" inputmode="decimal" step="0.1" placeholder="—"
-        value="${CF.goal||''}" onchange="CF.goal=this.value;saveCF()"> <span class="sub">kg</span></div>
-  </div>
-`)}
+        value="${CF.goal||''}" onchange="CF.goal=this.value;saveCF()"> <span class="sub">kg</span></div>`);
 
-  ${acc('meal','食事（カロリーとPFC）',bodyReady()?macroTarget(todayStr()).kcal+'kcal/日':'未設定',`
-  <div class="card">
+  h+=foldSec('meal','食事（カロリーとPFC）',bodyReady()?macroTarget(todayStr()).kcal+'kcal/日':'未設定',`
     <button class="btn ghost" onclick="openBody()">からだの情報と目標を設定</button>
     <div class="sub" style="margin-top:9px;font-size:11.5px">
       身長・年齢・活動レベルから、1日の消費カロリーと目標のPFCを計算します。${
       bodyReady()?(m=>`いまの目標は <b style="color:var(--fg)">${m.kcal}kcal</b>
         （P${m.p} / F${m.f} / C${m.c}g）です。`)(macroTarget(todayStr()))
-        :'まだ計算に必要な情報が足りません。'}</div>
-  </div>
-`)}
+        :'まだ計算に必要な情報が足りません。'}</div>`);
 
-  ${acc('data','データ','書き出し・読み込み',`
-  <div class="card">
+  h+=foldSec('push','毎朝の通知','7:00',`
+    <div id="pushStat" class="sub" style="margin-bottom:10px;font-size:12.5px">確認中…</div>
+    <button class="btn ghost" id="pushBtn" onclick="pushToggle()">通知をオンにする</button>
+    <button class="btn ghost" style="margin-top:9px" onclick="pushTest()">テスト通知を送る</button>
+    <div class="sub" style="font-size:11.5px;margin-top:9px">
+      毎朝7時に「体重を測りましょう」の通知が届きます。アプリを閉じていても届きます。<br>
+      ホーム画面に追加したKasane（Tailscale版）でオンにしてください。
+    </div>`);
+
+  h+=foldSec('data','バックアップ','',`
     <button class="btn ghost" onclick="exportJSON()" style="margin-bottom:9px">バックアップを書き出す</button>
     <button class="btn ghost" onclick="document.getElementById('imp').click()">バックアップを読み込む</button>
     <input type="file" id="imp" accept="application/json" style="display:none" onchange="importJSON(this)">
-    <div class="sub" style="margin-top:9px;font-size:11.5px">データはこの端末のブラウザ内にのみ保存されます。機種変更前に書き出してください。</div>
-  </div>
-  <div class="card"><button class="btn danger" onclick="wipe()">全データを削除</button></div>
-`)}
+    <div class="sub" style="margin:9px 0;font-size:11.5px">データはこの端末のブラウザ内にのみ保存されます。機種変更前に書き出してください。<br>${autoBackupStatus()}</div>
+    <button class="btn danger" style="margin-top:4px" onclick="wipe()">全データを削除</button>`);
 
-  ${acc('update','アプリの更新',UPDATE_READY?'<span style="color:var(--ok)">新しい版があります</span>':APP_V,`
+  /* アプリの更新だけは畳まない。いちばん使う項目で、新バージョンの知らせも見逃してほしくないため */
+  h+=`<h2 class="sec">アプリの更新</h2>
   <div class="card">
     <button class="btn ghost" id="updBtn" onclick="updateApp()">最新版に更新</button>
     <div class="sub" id="updMsg" style="margin-top:9px;font-size:11.5px">
@@ -2328,8 +2740,8 @@ function viewSet(){
                     :'画面が古いままのときに押してください。記録は消えません。'}
     </div>
   </div>
-`)}
   <div class="sub" style="text-align:center;margin-top:18px;font-size:11.5px">Kasane ${APP_V}</div>`;
+  return h;
 }
 function setRest(part,sec){
   if(!CF.restBy)CF.restBy=Object.assign({},REST_DEFAULT);
@@ -2355,6 +2767,11 @@ function importJSON(inp){
     if(!d.workouts||!d.exercises)throw 0;
     if(!confirm('現在のデータを上書きします。よろしいですか？'))return;
     EX=d.exercises;WO=d.workouts;WT=d.weights||{};WALK=d.walks||{};ML=d.meals||{};CF=Object.assign(CF,d.config||{});
+    /* 古いバックアップだと、その後に増えたプリセット種目が入っていない。
+       seedVersion は上書きされないので起動時の自動追加も走らない＝消えたままになる。
+       ここで不足分を足しておく（既存の種目・記録には触れない） */
+    const have=new Set(EX.map(e=>e.name));
+    EX=EX.concat(SEED.filter(s=>!have.has(s[0])).map(mkEx));
     saveEX();saveWO();saveWT();saveWALK();saveML();saveCF();render();alert('読み込みました');
   }catch(e){alert('ファイルを読めませんでした')}};
   r.readAsText(f);inp.value='';
@@ -2736,7 +3153,7 @@ function showHelp(){
 /* ================= 更新 =================
    ホーム画面から開くとSafariの再読み込みボタンが無いので、設定タブから明示的に更新できるようにする。
    キャッシュを消して読み直すだけなので、localStorageの記録には触れません */
-const APP_V='v3.2';
+const APP_V='v3.13';
 let UPDATE_READY=false;
 
 async function updateApp(){
@@ -2781,8 +3198,102 @@ function markUpdateReady(){
   toast('新しいバージョンがあります（設定タブ）');
 }
 
+/* ============ 毎朝の通知（Web Push） ============
+   iMac側のサーバー(tools/server.py)に購読を登録すると、
+   毎朝7時に send_push.py が通知を送ってくる。
+   iOSは「ホーム画面に追加したPWA」でのみ通知が使える（iOS16.4以降）。 */
+const VAPID_PUB='BFZ0oBxrGt69_3kOpo092dzXg4wbdHfjSDTNfqLeQOYeav1yBIExSgScxfGGIVUG_HoyB9KTMhqUf27jEJJODVA';
+const b64ToU8=s=>{const p='='.repeat((4-s.length%4)%4),b=atob((s+p).replace(/-/g,'+').replace(/_/g,'/'));
+  return Uint8Array.from(b,c=>c.charCodeAt(0))};
+
+function pushSupported(){return 'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window}
+
+async function pushSub(){
+  if(!pushSupported())return null;
+  try{const reg=await navigator.serviceWorker.ready;return await reg.pushManager.getSubscription()}
+  catch(e){return null}
+}
+async function pushRefresh(){
+  const st=document.getElementById('pushStat'),btn=document.getElementById('pushBtn');
+  if(!st)return;
+  if(!pushSupported()){
+    st.innerHTML='この開き方では通知が使えません。<b>ホーム画面に追加したKasane</b>から開いてください（iOS16.4以降）。';
+    if(btn)btn.style.display='none';return;
+  }
+  const sub=await pushSub();
+  if(sub){st.innerHTML='<span style="color:var(--ok)">✓ オンになっています。</span>毎朝7時に届きます';
+    btn.textContent='通知をオフにする'}
+  else if(Notification.permission==='denied'){
+    st.innerHTML='通知がブロックされています。iPhoneの<b>設定 → 通知 → Kasane</b>で許可してください';
+    btn.textContent='通知をオンにする'}
+  else{st.textContent='オフになっています';btn.textContent='通知をオンにする'}
+}
+async function pushToggle(){
+  if(!pushSupported())return;
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    const cur=await reg.pushManager.getSubscription();
+    if(cur){
+      await fetch('unsubscribe',{method:'POST',body:JSON.stringify({endpoint:cur.endpoint})}).catch(()=>{});
+      await cur.unsubscribe();
+      toast('通知をオフにしました');
+    }else{
+      const perm=await Notification.requestPermission();
+      if(perm!=='granted'){pushRefresh();return}
+      const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64ToU8(VAPID_PUB)});
+      const r=await fetch('subscribe',{method:'POST',body:JSON.stringify(sub.toJSON())});
+      if(!r.ok)throw new Error('server');
+      toast('毎朝7時に通知が届きます');
+    }
+  }catch(e){
+    /* github.io版にはサーバーが無いのでここに来る */
+    alert('登録できませんでした。Tailscale版（imac.tail…）のKasaneで試してください。');
+  }
+  pushRefresh();
+}
+async function pushTest(){
+  try{
+    const r=await fetch('push-test',{method:'POST'});
+    const d=await r.json();
+    toast(d.ok?'送りました。数秒でこの端末に届きます':'送れませんでした: '+(d.detail||''));
+  }catch(e){alert('サーバーに届きませんでした。Tailscale版で試してください。')}
+}
+
+/* ============ 自動バックアップ ============
+   記録はこの端末のブラウザの中にしか無い。機種変更やブラウザのデータ削除で消えてしまうので、
+   自宅サーバー版で開いたときだけ、その時点の全データをiMacへ送って backups/ に残しておく。
+   中身は「バックアップを書き出す」と同じ形なので、そのまま読み込みに使える。
+   公開版(github.io)は保存先のサーバーが無いので何もしない。
+   失敗しても黙って諦める（圏外・iMacが寝ている等。普段の操作を邪魔しないため） */
+const BK_LAST='kintore.lastBackup';
+function autoBackup(closing){
+  if(location.hostname.endsWith('github.io'))return;
+  if(Date.now()-(+localStorage.getItem(BK_LAST)||0)<30000)return;  /* アプリ切替の連打を抑える */
+  const body=JSON.stringify({v:2,exercises:EX,workouts:WO,weights:WT,walks:WALK,config:CF});
+  const done=()=>localStorage.setItem(BK_LAST,Date.now());
+  /* 閉じる瞬間は fetch が途中で打ち切られるので sendBeacon（送りっぱなし）を使う */
+  if(closing&&navigator.sendBeacon){
+    if(navigator.sendBeacon('backup',new Blob([body],{type:'application/json'})))done();
+    return;
+  }
+  fetch('backup',{method:'POST',headers:{'Content-Type':'application/json'},body})
+    .then(r=>{if(r.ok)done()}).catch(()=>{});
+}
+/* 設定タブに「ちゃんと効いているか」を出す。動いていないと気づけないため */
+function autoBackupStatus(){
+  if(location.hostname.endsWith('github.io'))
+    return '<span style="color:var(--sub)">この公開版では自動バックアップは動きません（自宅サーバー版で開くと自動保存されます）。</span>';
+  const t=+localStorage.getItem(BK_LAST)||0;
+  if(!t)return '<span style="color:var(--sub)">自動バックアップ：まだ実行されていません。</span>';
+  const d=new Date(t);
+  return `<span style="color:var(--ok)">自動バックアップ：${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} にiMacへ保存済み</span>`;
+}
+
 /* ================= boot ================= */
 render();
+autoBackup();
+/* アプリを閉じる/切り替える時にも保存して、その日つけた記録を取りこぼさない */
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')autoBackup(true)});
 /* 初めて開いたときだけセットアップを出す（既に記録がある人には出さない） */
 if(!CF.setupDone&&!WO.length&&!Object.keys(WT).length)startSetup();
 if('serviceWorker' in navigator){
