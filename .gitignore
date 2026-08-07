@@ -5,3 +5,4 @@ tools/vapid.json
 tools/push-subs.json
 tools/__pycache__/
 tools/vapid.pem
+backups/

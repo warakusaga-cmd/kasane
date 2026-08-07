@@ -2133,7 +2133,7 @@ function viewSet(){
     <button class="btn ghost" onclick="exportJSON()" style="margin-bottom:9px">バックアップを書き出す</button>
     <button class="btn ghost" onclick="document.getElementById('imp').click()">バックアップを読み込む</button>
     <input type="file" id="imp" accept="application/json" style="display:none" onchange="importJSON(this)">
-    <div class="sub" style="margin:9px 0;font-size:11.5px">データはこの端末のブラウザ内にのみ保存されます。機種変更前に書き出してください。</div>
+    <div class="sub" style="margin:9px 0;font-size:11.5px">データはこの端末のブラウザ内にのみ保存されます。機種変更前に書き出してください。<br>${autoBackupStatus()}</div>
     <button class="btn danger" style="margin-top:4px" onclick="wipe()">全データを削除</button>`);
 
   /* アプリの更新だけは畳まない。いちばん使う項目で、新バージョンの知らせも見逃してほしくないため */
@@ -2552,7 +2552,7 @@ function showHelp(){
 /* ================= 更新 =================
    ホーム画面から開くとSafariの再読み込みボタンが無いので、設定タブから明示的に更新できるようにする。
    キャッシュを消して読み直すだけなので、localStorageの記録には触れません */
-const APP_V='v3.11';
+const APP_V='v3.12';
 let UPDATE_READY=false;
 
 async function updateApp(){
@@ -2657,8 +2657,41 @@ async function pushTest(){
   }catch(e){alert('サーバーに届きませんでした。Tailscale版で試してください。')}
 }
 
+/* ============ 自動バックアップ ============
+   記録はこの端末のブラウザの中にしか無い。機種変更やブラウザのデータ削除で消えてしまうので、
+   自宅サーバー版で開いたときだけ、その時点の全データをiMacへ送って backups/ に残しておく。
+   中身は「バックアップを書き出す」と同じ形なので、そのまま読み込みに使える。
+   公開版(github.io)は保存先のサーバーが無いので何もしない。
+   失敗しても黙って諦める（圏外・iMacが寝ている等。普段の操作を邪魔しないため） */
+const BK_LAST='kintore.lastBackup';
+function autoBackup(closing){
+  if(location.hostname.endsWith('github.io'))return;
+  if(Date.now()-(+localStorage.getItem(BK_LAST)||0)<30000)return;  /* アプリ切替の連打を抑える */
+  const body=JSON.stringify({v:2,exercises:EX,workouts:WO,weights:WT,walks:WALK,config:CF});
+  const done=()=>localStorage.setItem(BK_LAST,Date.now());
+  /* 閉じる瞬間は fetch が途中で打ち切られるので sendBeacon（送りっぱなし）を使う */
+  if(closing&&navigator.sendBeacon){
+    if(navigator.sendBeacon('backup',new Blob([body],{type:'application/json'})))done();
+    return;
+  }
+  fetch('backup',{method:'POST',headers:{'Content-Type':'application/json'},body})
+    .then(r=>{if(r.ok)done()}).catch(()=>{});
+}
+/* 設定タブに「ちゃんと効いているか」を出す。動いていないと気づけないため */
+function autoBackupStatus(){
+  if(location.hostname.endsWith('github.io'))
+    return '<span style="color:var(--sub)">この公開版では自動バックアップは動きません（自宅サーバー版で開くと自動保存されます）。</span>';
+  const t=+localStorage.getItem(BK_LAST)||0;
+  if(!t)return '<span style="color:var(--sub)">自動バックアップ：まだ実行されていません。</span>';
+  const d=new Date(t);
+  return `<span style="color:var(--ok)">自動バックアップ：${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} にiMacへ保存済み</span>`;
+}
+
 /* ================= boot ================= */
 render();
+autoBackup();
+/* アプリを閉じる/切り替える時にも保存して、その日つけた記録を取りこぼさない */
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')autoBackup(true)});
 /* 初めて開いたときだけセットアップを出す（既に記録がある人には出さない） */
 if(!CF.setupDone&&!WO.length&&!Object.keys(WT).length)startSetup();
 if('serviceWorker' in navigator){
