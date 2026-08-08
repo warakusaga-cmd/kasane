@@ -205,6 +205,11 @@ h2.sec{font-size:13px;color:var(--sub);margin:20px 2px 9px;font-weight:600;lette
 .seg{display:flex;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
 .seg button{flex:1;padding:6px 0;border-radius:7px;font-size:12.5px;color:var(--sub)}
 .seg button.on{background:var(--accent);color:#fff;font-weight:600}
+/* おすすめの選択肢に付ける小さな点。文字を動かさずに位置を示すため右上に置く */
+.seg button.rec{position:relative}
+.seg button.rec::after{content:'';position:absolute;top:4px;right:6px;width:4px;height:4px;
+  border-radius:50%;background:var(--accent)}
+.seg button.rec.on::after{background:#fff}
 
 /* 初回セットアップ */
 #welcome{position:fixed;inset:0;z-index:200;background:var(--bg);display:none;overflow:auto}
@@ -2434,6 +2439,21 @@ function mealDel(id){
 /* ---- からだの情報 ---- */
 function openBody(){Sheet.open(bodyHTML())}
 function bodySet(k,v){CF[k]=v;saveCF();sheetSwap(bodyHTML());render()}
+function bodySetPFC(p,f){CF.pgkg=p;CF.fpct=f;saveCF();sheetSwap(bodyHTML());render();toast('おすすめのPFCにしました')}
+
+/* 目標に合わせたおすすめのPFC。
+   減らす時期ほどタンパク質を多めにするのは、カロリーが足りない状態では
+   体が筋肉も分解してしまうから。増やす時期は、トレーニングを支える炭水化物に
+   カロリーを回したいので、タンパク質は控えめでも足ります。
+   脂質はどの目標でも25%。20%を切るとホルモンに響き、30%を超えると炭水化物が足りなくなりがちです */
+function pfcRecommend(){
+  const plan=+CF.plan||0;
+  if(plan<=-15)return{p:2.2,f:25,why:'大きく減らす時期は、筋肉を守るためタンパク質を多めにします'};
+  if(plan<0)   return{p:2.0,f:25,why:'ゆるやかに減らす時期の、標準的な配分です'};
+  if(plan>0)   return{p:1.8,f:25,why:'増やす時期は炭水化物にカロリーを回したいので、少し控えめにします'};
+  return{p:2.0,f:25,why:'維持の時期の、標準的な配分です'};
+}
+const planLabel=()=>{const x=PLANS.find(([v])=>v===(+CF.plan||0));return x?x[1]:'維持'};
 function bodyNum(k,el){
   const v=String(el.value).replace(/[^\d.]/g,'');
   if(v!==el.value)el.value=v;
@@ -2448,6 +2468,7 @@ function bodyNum(k,el){
 }
 function bodyHTML(){
   const kg=bodyKg(),fat=bodyFat(),b=bmrInfo(),t=tdee(todayStr()),mt=macroTarget(todayStr());
+  const rec=pfcRecommend(),isRec=(+CF.pgkg===rec.p&&+CF.fpct===rec.f);
   const opt=(on,title,note,onclick)=>`<button class="opt${on?' on':''}" onclick="${onclick}">
     <b>${title}</b>${note?`<span>${note}</span>`:''}</button>`;
   let h=`<h3>からだの情報</h3>
@@ -2488,6 +2509,9 @@ function bodyHTML(){
 
   <h2 class="sec">目標</h2>
   <div class="card">
+    <div class="sub" style="font-size:11.5px;margin-bottom:9px">
+      迷ったら「ゆっくり減量」か「維持」から。下に出る「1週間で約◯kg」を見て、続けられそうなペースを選んでください。
+      −20%は体感がきついので、短い期間だけにしてください。</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
       ${PLANS.map(([v,l])=>`<button class="opt${+CF.plan===v?' on':''}" style="margin:0;padding:11px 12px"
         onclick="bodySet('plan',${v})"><b style="font-size:14px">${l}</b>
@@ -2505,14 +2529,26 @@ function bodyHTML(){
 
   <h2 class="sec">PFCの決め方</h2>
   <div class="card">
-    <div class="sub" style="font-size:12px;margin-bottom:7px">タンパク質（体重1kgあたり）</div>
-    <div class="seg" style="margin-bottom:11px">${[1.6,1.8,2.0,2.2,2.4].map(v=>
-      `<button class="${+CF.pgkg===v?'on':''}" onclick="bodySet('pgkg',${v})">${v}g</button>`).join('')}</div>
-    <div class="sub" style="font-size:12px;margin-bottom:7px">脂質（カロリーに対する割合）</div>
+    <div class="row" style="margin-bottom:7px">
+      <span class="sub grow" style="font-size:12px">タンパク質（体重1kgあたり）</span>
+      <span class="tag a">おすすめ ${rec.p}g</span></div>
+    <div class="seg" style="margin-bottom:12px">${[1.6,1.8,2.0,2.2,2.4].map(v=>
+      `<button class="${+CF.pgkg===v?'on':''}${v===rec.p?' rec':''}" onclick="bodySet('pgkg',${v})">${v}g</button>`).join('')}</div>
+    <div class="row" style="margin-bottom:7px">
+      <span class="sub grow" style="font-size:12px">脂質（カロリーに対する割合）</span>
+      <span class="tag a">おすすめ ${rec.f}%</span></div>
     <div class="seg">${[20,25,30].map(v=>
-      `<button class="${+CF.fpct===v?'on':''}" onclick="bodySet('fpct',${v})">${v}%</button>`).join('')}</div>
+      `<button class="${+CF.fpct===v?'on':''}${v===rec.f?' rec':''}" onclick="bodySet('fpct',${v})">${v}%</button>`).join('')}</div>
+    ${isRec?`<div class="sub" style="font-size:11.5px;margin-top:11px;color:var(--ok)">
+        ✓ いまはおすすめの組み合わせです</div>`
+      :`<button class="btn ghost sm" style="width:100%;margin-top:11px" onclick="bodySetPFC(${rec.p},${rec.f})">
+        おすすめ（P ${rec.p}g・F ${rec.f}%）にする</button>`}
     <div class="sub" style="font-size:11.5px;margin-top:10px">
-      筋トレをしているなら体重×1.6〜2.2gが目安です。脂質は減らしすぎるとホルモンに響くので、体重×0.6gを下限にしています。
+      いまの目標「${esc(planLabel())}」なら <b style="color:var(--fg)">P ${rec.p}g・F ${rec.f}%</b>。${esc(rec.why)}。<br>
+      目標を変えるとおすすめも変わります。迷ったらこのままで大丈夫です。
+    </div>
+    <div class="sub" style="font-size:11.5px;margin-top:9px;border-top:1px solid var(--line);padding-top:9px">
+      筋トレをしているなら、タンパク質は体重×1.6〜2.2gが目安です。脂質は減らしすぎるとホルモンに響くので、体重×0.6gを下限にしています。
       炭水化物は、残りのカロリーぶんが自動で決まります。</div>
   </div>`;
 
@@ -3192,7 +3228,7 @@ function showHelp(){
 /* ================= 更新 =================
    ホーム画面から開くとSafariの再読み込みボタンが無いので、設定タブから明示的に更新できるようにする。
    キャッシュを消して読み直すだけなので、localStorageの記録には触れません */
-const APP_V='v3.17';
+const APP_V='v3.18';
 let UPDATE_READY=false;
 
 async function updateApp(){
