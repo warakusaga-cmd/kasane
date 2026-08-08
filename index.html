@@ -3175,7 +3175,7 @@ function showHelp(){
 /* ================= 更新 =================
    ホーム画面から開くとSafariの再読み込みボタンが無いので、設定タブから明示的に更新できるようにする。
    キャッシュを消して読み直すだけなので、localStorageの記録には触れません */
-const APP_V='v3.15';
+const APP_V='v3.16';
 let UPDATE_READY=false;
 
 async function updateApp(){
@@ -3291,8 +3291,13 @@ async function pushTest(){
 const BK_LAST='kintore.lastBackup';
 function autoBackup(closing){
   if(location.hostname.endsWith('github.io'))return;
+  /* localhostはiMac上での開発・動作確認。ここから送るとテスト用の空データが
+     iPhoneのバックアップを同日上書きしてしまう（2026-08-08に実際に起きた） */
+  if(['localhost','127.0.0.1'].includes(location.hostname))return;
   if(Date.now()-(+localStorage.getItem(BK_LAST)||0)<30000)return;  /* アプリ切替の連打を抑える */
-  const body=JSON.stringify({v:2,exercises:EX,workouts:WO,weights:WT,walks:WALK,config:CF});
+  /* origin＝どの端末・アドレスから来たか。後で「これは本当にiPhoneのか？」を確かめられるように */
+  const body=JSON.stringify({v:3,exercises:EX,workouts:WO,weights:WT,walks:WALK,meals:ML,config:CF,
+                             origin:location.hostname,app:APP_V});
   const done=()=>localStorage.setItem(BK_LAST,Date.now());
   /* 閉じる瞬間は fetch が途中で打ち切られるので sendBeacon（送りっぱなし）を使う */
   if(closing&&navigator.sendBeacon){
