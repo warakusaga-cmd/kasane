@@ -12,6 +12,19 @@
 - **iPhoneで使う**: **https://<自分のtailnet名>.ts.net:8443** （Tailscale経由。外出先でもつながります）
   → Safariの共有ボタン →「ホーム画面に追加」でアプリのように使えます
 
+### iPhoneで開くアドレスが分からなくなったら
+
+**`アドレス.command` をダブルクリック**してください。
+
+- 自分のtailnet名を調べて、**開くべきURLを表示**します
+- **クリップボードにコピー**します
+- **QRコードを表示**します。iPhoneのカメラを向けるだけで開けるので、長いURLを手で打つ必要はありません
+- Tailscaleの `serve` 設定（HTTPSの受け口）が消えていたら、その場で入れ直します
+- サーバーが止まっていたら、それも教えます
+
+QRコードは `tools/qr.py` で作っています（外部ライブラリなし・Macの標準のPython3だけで動きます。
+8bitバイトモード／誤り訂正M／バージョン1〜6、106文字まで）。
+
 ### ⚠️ URLは1つに固定してください
 
 データは**URL（オリジン）ごとに別々**に保存されます。
@@ -516,8 +529,10 @@ icon.svg      アイコンの原図
 make-icons.py アイコンPNGの生成スクリプト（icon.svg と同じ絵を描く）
 icon.png      アイコン 512px / icon-192.png 192px / apple-touch-icon.png 180px
 start.command 起動用スクリプト
+アドレス.command  iPhoneで開くURLを表示（コピー＋QRコード）
 tools/        サーバーと通知（server.py＝配信＋購読受付 / send_push.py＝毎朝の通知送信 /
-              vapid.*＝通知の鍵(git管理外) / genimg.py＝イラスト生成の実験）
+              vapid.*＝通知の鍵(git管理外) / genimg.py＝イラスト生成の実験 /
+              qr.py＝QRコード生成（外部ライブラリなし））
 ```
 
 メニューや解説文を変えたいときは `data.js` を編集してください。種目名がキーになっています。
