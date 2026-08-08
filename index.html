@@ -435,6 +435,8 @@ function suggestNext(exId,beforeDate){
   const prev=lastRecord(exId,beforeDate||todayStr());
   if(!prev||!prev.sets.length)return null;   // 初回は前例が無いので出さない
 
+  /* バドミントンなどの有酸素は「前回より長く」を目指すものではないので提案しない */
+  if(isCardioTime(ex))return null;
   if(ex.unit==='time'){
     const best=Math.max(...prev.sets.map(s=>+s.r||0));
     return {r:best+15,label:`${secLabel(best+15)}（前回より15秒長く）`};
@@ -485,7 +487,18 @@ function secLabel(v){
   const m=Math.floor(n/60),s=n%60;
   return s?`${m}分${s}秒`:`${m}分`;
 }
+/* 時間種目でも、プランクは「秒」・バドミントンなどの有酸素は「分」で入力する。
+   2時間のバドミントンを7200秒と打つのは現実的でないため */
+const isCardioTime=ex=>ex.part==='有酸素'&&ex.unit==='time';
+/* 分数を読みやすく。45 → 45分 / 90 → 1時間30分 / 120 → 2時間 */
+function minLabel(v){
+  const n=Math.round(+v||0);
+  if(n<60)return n+'分';
+  const h=Math.floor(n/60),m=n%60;
+  return m?`${h}時間${m}分`:`${h}時間`;
+}
 function setLabel(ex,s){
+  if(isCardioTime(ex))return minLabel(s.r);
   if(ex.unit==='time')return secLabel(s.r);
   if(ex.unit==='bw')return `${s.r||0}回`;
   return `${s.w||0}${CF.unit}×${s.r||0}`;
@@ -1325,10 +1338,12 @@ function viewLog(){
       en.sets.forEach((s,i)=>{
         const wDis=ex.unit!=='kg';
         const phw=s.ph&&s.ph.w!==''&&s.ph.w!=null?s.ph.w:'kg';
-        const phr=s.ph&&s.ph.r!==''&&s.ph.r!=null?s.ph.r:(ex.unit==='time'?'秒':'回');
+        const phr=s.ph&&s.ph.r!==''&&s.ph.r!=null?s.ph.r:(isCardioTime(ex)?'分':ex.unit==='time'?'秒':'回');
         h+=`<div class="setrow${s.done?' done':''}${s.ph?' hasph':''}" data-ex="${en.exerciseId}" data-i="${i}">
           <div class="n">${i+1}</div>
-          ${ex.unit==='time'
+          ${isCardioTime(ex)
+              ?`<div class="sub" style="text-align:center;font-size:12px">時間（分）</div>`
+            :ex.unit==='time'
               ?`<button class="btn ghost sm nw" style="padding:7px 0;font-size:12px" onclick="startSetTimer('${en.exerciseId}',${i})">▶ 計測</button>`
             :wDis?`<div class="sub" style="text-align:center;font-size:12px">自重</div>`
                 :`<input type="text" inputmode="decimal" enterkeyhint="done" placeholder="${phw}" value="${s.w??''}" oninput="setVal('${en.exerciseId}',${i},'w',this)">`}
@@ -1498,8 +1513,10 @@ function addEntry(exId){
   const w=getWorkout(VIEW_DATE,true);
   if(w.entries.some(e=>e.exerciseId===exId)){Sheet.close();render();return}
   const prev=lastRecord(exId,VIEW_DATE);
+  /* バドミントンなどの有酸素は「3セット」ではなく1行（合計何分やったか）で記録する */
+  const blank=isCardioTime(exById(exId))?1:3;
   const sets=prev?prev.sets.slice(0,4).map(s=>({w:'',r:'',ph:{w:s.w,r:s.r},done:false}))
-                 :[{w:'',r:'',done:false},{w:'',r:'',done:false},{w:'',r:'',done:false}];
+                 :Array.from({length:blank},()=>({w:'',r:'',done:false}));
   w.entries.push({exerciseId:exId,sets});saveWO();Sheet.close();render();
 }
 function rmEntry(exId){const w=getWorkout(VIEW_DATE);if(!w)return;
@@ -2025,7 +2042,7 @@ function workoutBurn(date){
     const ex=exById(en.exerciseId);if(!ex)continue;
     const done=en.sets.filter(s=>s.done);if(!done.length)continue;
     if(ex.part==='有酸素'&&ex.unit==='time'){
-      const min=done.reduce((a,s)=>a+(+s.r||0),0)/60;
+      const min=done.reduce((a,s)=>a+(+s.r||0),0);   /* 有酸素のrは「分」で持つ */
       out.cardioMin+=min;
       out.kcal+=metsKcal(METS_CARDIO[ex.name]||6.0,kg,min);
     }else{
@@ -2631,7 +2648,7 @@ function newEx(){
     <div style="margin-bottom:10px"><div class="sub" style="margin-bottom:5px">部位</div>
       <select id="np">${PARTS.map(p=>`<option>${p}</option>`).join('')}</select></div>
     <div style="margin-bottom:16px"><div class="sub" style="margin-bottom:5px">計測</div>
-      <select id="nu"><option value="kg">重量 × 回数</option><option value="bw">自重（回数のみ）</option><option value="time">時間（分）</option></select></div>
+      <select id="nu"><option value="kg">重量 × 回数</option><option value="bw">自重（回数のみ）</option><option value="time">時間（有酸素は分・それ以外は秒）</option></select></div>
     <button class="btn" onclick="saveNewEx()">追加する</button>`);
   setTimeout(()=>document.getElementById('nn').focus(),80);
 }
@@ -3175,7 +3192,7 @@ function showHelp(){
 /* ================= 更新 =================
    ホーム画面から開くとSafariの再読み込みボタンが無いので、設定タブから明示的に更新できるようにする。
    キャッシュを消して読み直すだけなので、localStorageの記録には触れません */
-const APP_V='v3.16';
+const APP_V='v3.17';
 let UPDATE_READY=false;
 
 async function updateApp(){
