@@ -3173,7 +3173,7 @@ function showHelp(){
 /* ================= 更新 =================
    ホーム画面から開くとSafariの再読み込みボタンが無いので、設定タブから明示的に更新できるようにする。
    キャッシュを消して読み直すだけなので、localStorageの記録には触れません */
-const APP_V='v3.13';
+const APP_V='v3.14';
 let UPDATE_READY=false;
 
 async function updateApp(){
@@ -3311,6 +3311,15 @@ function autoBackupStatus(){
 }
 
 /* ================= boot ================= */
+/* 公開版(github.io)は予備のアドレス。同じアプリに見えて記録は別々に貯まるので、
+   ここに付けてしまわないよう開いた瞬間に分かる帯を出す（render()は#appに書くので消えない） */
+if(location.hostname.endsWith('github.io')){
+  const b=document.createElement('div');
+  b.style.cssText='background:var(--warn);color:#fff;padding:10px 13px;font-size:12.5px;line-height:1.55;text-align:center';
+  b.innerHTML='⚠️ これは<b>予備のアドレス</b>です。記録はホーム画面のKasaneに付けてください<br>'
+             +'<span style="opacity:.85">（ここに付けた記録は別々に貯まり、バックアップもされません）</span>';
+  document.body.insertBefore(b,document.body.firstChild);
+}
 render();
 autoBackup();
 /* アプリを閉じる/切り替える時にも保存して、その日つけた記録を取りこぼさない */
