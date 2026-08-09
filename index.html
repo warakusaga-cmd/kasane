@@ -1029,9 +1029,9 @@ function plateRun(){
 }
 
 /* ================= router ================= */
-let TAB='log',VIEW_DATE=todayStr();
+let TAB='log',VIEW_DATE=todayStr(),WT_DATE=todayStr();
 /* タブ移動＝一番上へ。セットの✓など画面内の操作＝スクロール位置を保つ */
-function go(t){TAB=t;if(t==='log')VIEW_DATE=todayStr();if(t==='meal')MEAL_DATE=todayStr();render(true)}
+function go(t){TAB=t;if(t==='log')VIEW_DATE=todayStr();if(t==='meal')MEAL_DATE=todayStr();if(t==='wt')WT_DATE=todayStr();render(true)}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.tab));
 function render(toTop){
   const y=window.scrollY;
@@ -1627,6 +1627,12 @@ const nowHM=()=>{const d=new Date();return d.getHours()+':'+String(d.getMinutes(
 const hm2min=t=>{const m=/^(\d{1,2}):(\d{2})$/.exec(t||'');return m?+m[1]*60+ +m[2]:null};
 const min2hm=v=>Math.floor(v/60)+':'+String(Math.round(v%60)).padStart(2,'0');
 /* いつも測っている時間帯（中央値）。ばらつきの判断に使う */
+/* 体重タブの日付移動（付け忘れの後書き用）。未来へは行かない */
+function wtGo(d){
+  const nx=dstr(new Date(dObj(WT_DATE).getTime()+d*86400000));
+  if(nx>todayStr())return;
+  WT_DATE=nx;render();
+}
 function wtUsualTime(){
   const mins=Object.values(WT).map(x=>hm2min(x.t)).filter(v=>v!=null).sort((a,b)=>a-b);
   if(mins.length<3)return null;
@@ -1677,19 +1683,25 @@ function viewWt(){
       <b style="font-size:17px">${goal&&latest!=null?sign(goal-latest):'—'}</b></div>
   </div>`;
 
-  // 入力
-  const val=cur?(+cur.w).toFixed(1):(latest!=null?latest.toFixed(1):'');
+  // 入力（測り忘れた日に後から書けるよう、日付を行き来できる）
+  const wd=WT_DATE,wdToday=wd===today,curD=WT[wd];
+  const val=curD?(+curD.w).toFixed(1):(latest!=null?latest.toFixed(1):'');
   h+=`<div class="card">
-    <div class="sub" style="margin-bottom:8px">${fmtD(today)} の体重${cur?'（記録済み）':''}</div>
+    <div class="row" style="gap:8px;margin-bottom:8px">
+      <button class="howto" onclick="wtGo(-1)">‹ 前の日</button>
+      <div class="grow sub" style="text-align:center">${fmtD(wd)} の体重${curD?'（記録済み）':''}${wdToday?'':'<br><span style="color:var(--warn);font-size:11px">過去の日に記録します</span>'}</div>
+      ${wdToday?'':`<button class="howto" onclick="wtGo(1)">›</button>
+      <button class="howto" onclick="WT_DATE=todayStr();render()">今日へ</button>`}
+    </div>
     <div class="step">
       <button onclick="wtStep(-0.1)">−</button>
       <input id="wtin" type="number" inputmode="decimal" step="0.1" placeholder="00.0" value="${val}">
       <button onclick="wtStep(0.1)">＋</button>
     </div>
     <div class="row" style="margin-top:9px">
-      <input id="wtfat" type="number" inputmode="decimal" step="0.1" placeholder="体脂肪率 %（任意）" value="${cur&&cur.f?cur.f:''}" style="flex:1">
+      <input id="wtfat" type="number" inputmode="decimal" step="0.1" placeholder="体脂肪率 %（任意）" value="${curD&&curD.f?curD.f:''}" style="flex:1">
     </div>
-    <div style="margin-top:9px"><button class="btn" onclick="wtSave()">${cur?'更新する':'記録する'}</button></div>
+    <div style="margin-top:9px"><button class="btn" onclick="wtSave()">${curD?'更新する':'記録する'}</button></div>
   </div>`;
 
   // グラフ
@@ -1951,10 +1963,14 @@ function wtSave(){
   const f=document.getElementById('wtfat').value.trim();
   /* 測った時刻も残す。体重は時間帯で1kg近く動くので、あとから数字を読むのに要る。
      体重の値が変わっていれば測り直しとみなして時刻を更新、体脂肪率だけの追記なら元の時刻を保つ */
-  const prev=WT[todayStr()], w2=+v.toFixed(1);
-  const keep=prev&&prev.t&&+prev.w===w2;
-  WT[todayStr()]={w:w2,t:keep?prev.t:nowHM()};
-  if(f)WT[todayStr()].f=+f;
+  const d=WT_DATE, prev=WT[d], w2=+v.toFixed(1);
+  const rec={w:w2};
+  if(prev&&prev.t&&+prev.w===w2)rec.t=prev.t;   // 値が同じ＝体脂肪率の追記。元の時刻を保つ
+  else if(d===todayStr())rec.t=nowHM();
+  /* 過去の日への後書きは、実際に何時に測ったか分からないので時刻は付けない
+     （時刻が無い記録は「いつもと違う時間」の判定から外れる作りになっている） */
+  if(f)rec.f=+f;
+  WT[d]=rec;
   saveWT();render();
 }
 function wtDel(d){if(!confirm(fmtD(d)+' の記録を削除しますか？'))return;delete WT[d];saveWT();render()}
@@ -3222,7 +3238,7 @@ function showHelp(){
 /* ================= 更新 =================
    ホーム画面から開くとSafariの再読み込みボタンが無いので、設定タブから明示的に更新できるようにする。
    キャッシュを消して読み直すだけなので、localStorageの記録には触れません */
-const APP_V='v3.19';
+const APP_V='v3.20';
 let UPDATE_READY=false;
 
 async function updateApp(){
