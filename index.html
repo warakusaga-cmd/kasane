@@ -316,7 +316,7 @@ const SEED=[
   ['トーソローテーション','腹'],
   ['ランニング','有酸素','time'],['ウォーキング','有酸素','time'],['エアロバイク','有酸素','time'],
   ['ローイングマシン','有酸素','time'],['クロストレーナー','有酸素','time'],['縄跳び','有酸素','time'],
-  ['バドミントン','有酸素','time'],
+  ['バドミントン','有酸素','time'],['登山','有酸素','time'],
   /* スミスマシン（バーがレールで固定されている台。1人でも追い込みやすい） */
   ['スミスマシンベンチプレス','胸'],['スミスマシンインクラインプレス','胸'],
   ['スミスマシンショルダープレス','肩'],['スミスマシンベントオーバーロー','背中'],
@@ -326,7 +326,7 @@ const SEED=[
 /* SEEDを増やしたらここを上げる。既存ユーザーには不足分だけが追加されます。
    追加のみ・削除はしないので、記録が消えることはありません。
    自分で削除した種目は、次にこの番号を上げるまで復活しません */
-const SEED_V=8;   /* バドミントンを追加（金夜・日朝晩にやっているため記録できるように） */
+const SEED_V=9;   /* 登山を追加（バドミントンは8で追加済み） */
 const mkEx=s=>({id:uid(),name:s[0],part:s[1],unit:s[2]||'kg'});
 
 let EX=load(K.ex,null);
@@ -681,8 +681,20 @@ function planMenu(parts,budgetMin){
   });
   if(cardio.length){
     const it=MENUS['有酸素'].items[0];
+    /* 毎回ランニング固定だと、バドミントンの人は毎回選び直しになる。
+       前回やった有酸素種目があればそれを出す（初回だけ既定のランニング） */
+    const lastC=(()=>{
+      for(const w of WO)for(const en of w.entries){
+        const ex=exById(en.exerciseId);
+        if(ex&&ex.part==='有酸素'&&en.sets.some(s=>s.done)){
+          const min=en.sets.reduce((a,s)=>a+(s.done?+s.r||0:0),0);
+          return {name:ex.name,min};
+        }
+      }return null})();
+    const name=lastC?lastC.name:it[0];
+    const note=lastC?(lastC.name===it[0]?it[3]:`前回は${minLabel(lastC.min)}`):it[3];
     plan.push({part:'有酸素',aim:MENUS['有酸素'].aim,
-      items:[{name:it[0],sets:1,base:1,rep:cardioMin+'分',note:it[3],minutes:cardioMin}]});
+      items:[{name,sets:1,base:1,rep:cardioMin+'分',note,minutes:cardioMin}]});
   }
   /* 所要時間の見積りも、種目それぞれの部位のインターバルで計算する */
   let est=WARMUP_MIN+cardioMin;
@@ -2014,7 +2026,8 @@ const METS_STRENGTH=5.0;
 const MAX_SESSION_MIN=240;
 const METS_CARDIO={'ランニング':9.8,'ウォーキング':3.5,'エアロバイク':7.0,
   'ローイングマシン':7.0,'クロストレーナー':5.0,'縄跳び':12.3,
-  'バドミントン':5.5};   /* ダブルス中心。シングルス主体なら7.0が目安 */
+  'バドミントン':5.5,    /* ダブルス中心。シングルス主体なら7.0が目安 */
+  '登山':6.0};           /* 山道ハイキング。重い荷物や急登はもっと上がるが控えめに見る */
 const metsKcal=(mets,kg,min)=>mets*kg*(min/60)*1.05;
 
 /* 体重タブの最新の記録を使う。体重が無いと何も計算できない */
@@ -3209,7 +3222,7 @@ function showHelp(){
 /* ================= 更新 =================
    ホーム画面から開くとSafariの再読み込みボタンが無いので、設定タブから明示的に更新できるようにする。
    キャッシュを消して読み直すだけなので、localStorageの記録には触れません */
-const APP_V='v3.18';
+const APP_V='v3.19';
 let UPDATE_READY=false;
 
 async function updateApp(){
