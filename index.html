@@ -1239,6 +1239,17 @@ function viewLog(){
     <div class="meta">${isToday?fmtD(date):''}</div>
     <button class="qbtn" onclick="showHelp()" title="使い方">?</button></header>`;
 
+  /* 昨日の付け忘れに後から書けるように、日付を行き来できるようにする。
+     未来には行けない（まだやっていない日に記録が付くのを防ぐ） */
+  h+=`<div class="row" style="gap:8px;margin-bottom:11px">
+    <button class="howto" onclick="logGo(-1)">‹ 前の日</button>
+    <div class="grow" style="text-align:center">${isToday
+      ?'<span class="sub" style="font-size:12px">付け忘れは「‹ 前の日」から</span>'
+      :`<span class="sub" style="font-size:12px;color:var(--warn)">過去の日を編集中</span>`}</div>
+    ${isToday?'':`<button class="howto" onclick="logGo(1)">翌日 ›</button>
+    <button class="howto" onclick="openDay(todayStr())">今日へ</button>`}
+  </div>`;
+
   /* 今日のひとこと（経過報告＋ワンポイント）。今日を見ているときだけ先頭に出す */
   h+=dailyCard(date);
 
@@ -1374,7 +1385,7 @@ function viewLog(){
   /* 完了ボタン。1セットでも記録があるときだけ出す */
   const anyDone=w&&w.entries.some(en=>en.sets.some(s=>s.done));
   if(anyDone&&!w.finished)
-    h+=`<div style="margin-top:9px"><button class="btn" style="background:var(--ok)" onclick="finishWorkout()">今日のトレーニングを完了する</button></div>`;
+    h+=`<div style="margin-top:9px"><button class="btn" style="background:var(--ok)" onclick="finishWorkout()">${isToday?'今日の':'この日の'}トレーニングを完了する</button></div>`;
   return h;
 }
 
@@ -2619,6 +2630,12 @@ function viewHist(){
   return h+`</div>`;
 }
 function openDay(d){VIEW_DATE=d;TAB='log';render(true)}
+/* 記録タブの日付移動。食事タブのmealGoと同じ作法（未来へは行かない） */
+function logGo(d){
+  const nx=dstr(new Date(dObj(VIEW_DATE).getTime()+d*86400000));
+  if(nx>todayStr())return;
+  VIEW_DATE=nx;render(true);
+}
 
 /* ================= 種目 ================= */
 function viewEx(){
@@ -3192,7 +3209,7 @@ function showHelp(){
 /* ================= 更新 =================
    ホーム画面から開くとSafariの再読み込みボタンが無いので、設定タブから明示的に更新できるようにする。
    キャッシュを消して読み直すだけなので、localStorageの記録には触れません */
-const APP_V='v3.17';
+const APP_V='v3.18';
 let UPDATE_READY=false;
 
 async function updateApp(){
