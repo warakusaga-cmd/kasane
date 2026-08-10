@@ -3238,7 +3238,7 @@ function showHelp(){
 /* ================= 更新 =================
    ホーム画面から開くとSafariの再読み込みボタンが無いので、設定タブから明示的に更新できるようにする。
    キャッシュを消して読み直すだけなので、localStorageの記録には触れません */
-const APP_V='v3.22';
+const APP_V='v3.23';
 let UPDATE_READY=false;
 
 async function updateApp(){
@@ -3380,6 +3380,35 @@ function autoBackupStatus(){
   return `<span style="color:var(--ok)">自動バックアップ：${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} にiMacへ保存済み</span>`;
 }
 
+/* ============ クロコからの入力（受け取り） ============
+   チャットで「入力しといて」と頼まれた記録を、iMac側の tools/inbox.json から受け取る。
+   自宅サーバー版だけ（公開版とiMac上の動作確認では動かない）。
+   取り込んだらサーバーへ知らせて、ファイルを消してもらう（二重取り込み防止） */
+function inboxMerge(d){
+  let n=0;
+  for(const m of (d&&d.meals)||[]){
+    if(!m.date||!m.name)continue;
+    ML[m.date]=ML[m.date]||[];
+    /* 同じ日に同じ名前が既にあれば入れない（手入力と重なった場合の保険） */
+    if(ML[m.date].some(x=>x.name===m.name&&x.slot===(m.slot||'昼')))continue;
+    ML[m.date].push({id:uid(),name:m.name,slot:m.slot||'昼',kcal:Math.round(+m.kcal)||0,
+                     p:+m.p||0,f:+m.f||0,c:+m.c||0,t:m.t||''});
+    n++;
+  }
+  if(n){saveML();render();toast(`クロコが食事を${n}件入力しておきました 🍙`)}
+  return n;
+}
+async function inboxPull(){
+  if(location.hostname.endsWith('github.io'))return;
+  if(['localhost','127.0.0.1'].includes(location.hostname))return;
+  try{
+    const r=await fetch('inbox');if(!r.ok)return;
+    const d=await r.json();
+    inboxMerge(d);
+    fetch('inbox-done',{method:'POST'}).catch(()=>{});  /* 中身を処理したら必ず消してもらう */
+  }catch(e){/* iMacが寝ている等。次に開いたときにまた試す */}
+}
+
 /* ================= boot ================= */
 /* 公開版(github.io)は予備のアドレス。同じアプリに見えて記録は別々に貯まるので、
    ここに付けてしまわないよう開いた瞬間に分かる帯を出す（render()は#appに書くので消えない） */
@@ -3392,6 +3421,7 @@ if(location.hostname.endsWith('github.io')){
 }
 render();
 autoBackup();
+inboxPull();
 /* アプリを閉じる/切り替える時にも保存して、その日つけた記録を取りこぼさない */
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')autoBackup(true)});
 /* 初めて開いたときだけセットアップを出す（既に記録がある人には出さない） */

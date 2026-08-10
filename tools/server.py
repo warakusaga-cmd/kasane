@@ -5,6 +5,8 @@
   POST /subscribe  … iPhoneからの購読情報を push-subs.json に保存する
   POST /push-test  … 登録済みの全端末にテスト通知を送る（設定タブの「テスト通知」ボタン用）
   POST /backup     … iPhone側の記録を backups/ に丸ごと保存する（自動バックアップ）
+  GET  /inbox      … クロコが用意した入力待ちの記録（tools/inbox.json）をアプリへ渡す
+  POST /inbox-done … アプリが取り込み終えたら inbox.json を消す（二重取り込み防止）
 それ以外のリクエストは従来どおり ~/kasane を配信する。
 
 launchd(com.morikastu.kasane)がこのスクリプトを8787で起動し、
@@ -73,9 +75,27 @@ def save_backup(data):
     return name, cnt, True
 
 
+INBOX = os.path.join(TOOLS, 'inbox.json')          # クロコが書く入力待ちファイル（gitに上げない）
+
+
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *a, **kw):
         super().__init__(*a, directory=ROOT, **kw)
+
+    def do_GET(self):
+        if self.path == '/inbox':
+            try:
+                body = open(INBOX, 'rb').read()
+                json.loads(body)                   # 壊れたファイルを配らない
+            except Exception:
+                return self._json(404, {'ok': False})
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+        return super().do_GET()
 
     def _json(self, code, obj):
         body = json.dumps(obj).encode()
@@ -103,6 +123,12 @@ class Handler(SimpleHTTPRequestHandler):
                 return self._json(500, {'ok': False, 'error': str(e)})
             return self._json(200, {'ok': True, 'saved': name if wrote else None,
                                     'workouts': cnt, 'skipped': not wrote})
+        if self.path == '/inbox-done':
+            try:
+                os.remove(INBOX)
+            except OSError:
+                pass
+            return self._json(200, {'ok': True})
         if self.path == '/subscribe':
             try:
                 sub = json.loads(raw)
