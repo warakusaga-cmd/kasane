@@ -7,3 +7,4 @@ tools/__pycache__/
 tools/vapid.pem
 backups/
 tools/inbox.json
+CLAUDE.md
