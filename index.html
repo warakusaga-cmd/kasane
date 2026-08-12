@@ -205,6 +205,11 @@ h2.sec{font-size:13px;color:var(--sub);margin:20px 2px 9px;font-weight:600;lette
 .seg{display:flex;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
 .seg button{flex:1;padding:6px 0;border-radius:7px;font-size:12.5px;color:var(--sub)}
 .seg button.on{background:var(--accent);color:#fff;font-weight:600}
+/* おすすめの選択肢に付ける小さな点。文字を動かさずに位置を示すため右上に置く */
+.seg button.rec{position:relative}
+.seg button.rec::after{content:'';position:absolute;top:4px;right:6px;width:4px;height:4px;
+  border-radius:50%;background:var(--accent)}
+.seg button.rec.on::after{background:#fff}
 
 /* 初回セットアップ */
 #welcome{position:fixed;inset:0;z-index:200;background:var(--bg);display:none;overflow:auto}
@@ -280,9 +285,9 @@ h2.sec{font-size:13px;color:var(--sub);margin:20px 2px 9px;font-weight:600;lette
 
 <!-- ?v= はキャッシュ対策。ブラウザは同じURLだと古いファイルを使い続けるので、
      data.js / figures.js / foods.js を直したら、下の APP_V と一緒にこの数字も上げること -->
-<script src="figures.js?v=3.22"></script>
-<script src="data.js?v=3.22"></script>
-<script src="foods.js?v=3.22"></script>
+<script src="figures.js?v=3.24"></script>
+<script src="data.js?v=3.24"></script>
+<script src="foods.js?v=3.24"></script>
 <script>
 /* ================= storage ================= */
 const K={ex:'kintore.exercises',wo:'kintore.workouts',cf:'kintore.config',wt:'kintore.weights',
@@ -2343,6 +2348,7 @@ function foodSheet(slot){
   MEAL_SLOT=slot||nowSlot();
   Sheet.open(`<h3>${esc(MEAL_SLOT)}に追加</h3>
     <input id="foodq" placeholder="食品を検索…" oninput="foodFilter(this.value)" style="margin-bottom:9px">
+    ${canPhoto()?`<button class="btn sm" style="width:100%;margin-bottom:9px" onclick="photoPick()">📷 写真から入力（自動で計算）</button>`:''}
     <button class="btn ghost sm" style="width:100%;margin-bottom:11px" onclick="mealForm()">一覧に無いものを手で入力する</button>
     <div id="foodlist">${foodRows()}</div>`);
 }
@@ -2424,24 +2430,80 @@ function mealFav(i){
 }
 
 /* ---- 手で入力・修正 ---- */
-function mealForm(id){
+function mealForm(id,pre){
   const m=id?mealsOf(MEAL_DATE).find(x=>x.id===id):null;
   if(m)MEAL_SLOT=m.slot;
-  const row=(lab,fid,v,unit)=>`<div class="row" style="margin-bottom:8px"><span style="width:82px" class="sub">${lab}</span>
-    <input id="${fid}" class="grow" type="text" inputmode="decimal" value="${v}" placeholder="0" style="text-align:center">
+  const v=m||pre;   // 編集 or 写真解析のプリフィル
+  const row=(lab,fid,val,unit)=>`<div class="row" style="margin-bottom:8px"><span style="width:82px" class="sub">${lab}</span>
+    <input id="${fid}" class="grow" type="text" inputmode="decimal" value="${val}" placeholder="0" style="text-align:center">
     <span class="sub" style="width:30px">${unit}</span></div>`;
-  Sheet.open(`<h3>${m?'記録を直す':'手で入力'}</h3>
+  Sheet.open(`<h3>${m?'記録を直す':pre?'写真から読み取りました':'手で入力'}</h3>
+    ${pre?`<div class="sub" style="margin:-6px 0 10px;font-size:12px">${esc(pre.note||'')}
+      <span style="color:var(--sub)">— 推定値です。違っていたら直してから追加してください。</span></div>`:''}
     <div class="seg" style="margin-bottom:11px">${SLOTS.map(s=>
       `<button class="${s===MEAL_SLOT?'on':''}" onclick="mealSlotSel('${s}')">${s}</button>`).join('')}</div>
-    <input id="mfN" placeholder="食べたもの（例: コンビニの唐揚げ）" value="${m?esc(m.name):''}" style="margin-bottom:10px">
-    ${row('カロリー','mfK',m?Math.round(m.kcal):'','kcal')}
-    ${row('P タンパク質','mfP',m?r1(+m.p||0):'','g')}
-    ${row('F 脂質','mfF',m?r1(+m.f||0):'','g')}
-    ${row('C 炭水化物','mfC',m?r1(+m.c||0):'','g')}
+    <input id="mfN" placeholder="食べたもの（例: コンビニの唐揚げ）" value="${v?esc(v.name):''}" style="margin-bottom:10px">
+    ${row('カロリー','mfK',v?Math.round(v.kcal):'','kcal')}
+    ${row('P タンパク質','mfP',v?r1(+v.p||0):'','g')}
+    ${row('F 脂質','mfF',v?r1(+v.f||0):'','g')}
+    ${row('C 炭水化物','mfC',v?r1(+v.c||0):'','g')}
     <div class="sub" style="font-size:11.5px;margin:2px 0 12px">
-      カロリーを空けておくと、PFCから計算します（P4・F9・C4kcal/g）。パッケージの「栄養成分表示」の数字をそのまま入れてください。</div>
+      カロリーを空けておくと、PFCから計算します（P4・F9・C4kcal/g）。${pre?'':'パッケージの「栄養成分表示」の数字をそのまま入れてください。'}</div>
     <button class="btn" onclick="mealSave('${m?m.id:''}')">${m?'保存する':'追加する'}</button>
     ${m?`<button class="btn danger" style="margin-top:9px" onclick="mealDel('${m.id}')">この記録を削除</button>`:''}`);
+}
+
+/* ---- 写真から入力 ----
+   写真を小さくしてiMacの /analyze に送り、Claudeが推定したカロリーとPFCを
+   「手で入力」のフォームに入れて返す。最後に人が確認してから追加する形にしている。
+   公開版(github.io)には解析してくれるサーバーが無いので、ボタン自体を出さない */
+const canPhoto=()=>!location.hostname.endsWith('github.io');
+function photoPick(){
+  let inp=document.getElementById('photoInp');
+  if(!inp){
+    inp=document.createElement('input');
+    inp.type='file';inp.accept='image/*';inp.id='photoInp';inp.style.display='none';
+    document.body.appendChild(inp);
+    inp.onchange=()=>{if(inp.files[0])photoAnalyze(inp.files[0]);inp.value=''};
+  }
+  inp.click();
+}
+/* 長辺1280pxに縮めてJPEGにする。通信量と解析コストを抑えるためで、この程度あれば十分読める */
+function photoShrink(file){
+  return new Promise((ok,ng)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const sc=Math.min(1,1280/Math.max(img.width,img.height));
+      const cv=document.createElement('canvas');
+      cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+      URL.revokeObjectURL(img.src);
+      ok(cv.toDataURL('image/jpeg',0.8).split(',')[1]);
+    };
+    img.onerror=()=>ng(new Error('bad image'));
+    img.src=URL.createObjectURL(file);
+  });
+}
+async function photoAnalyze(file){
+  Sheet.open(`<h3>写真を解析中…</h3>
+    <div class="empty" style="padding:30px 20px">📷 → 🍚<br><br>
+      カロリーとPFCを読み取っています。<br>10〜30秒ほどかかります。</div>`);
+  let resp;
+  try{
+    const image=await photoShrink(file);
+    const r=await fetch('analyze',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({image,media_type:'image/jpeg'})});
+    resp=await r.json();
+  }catch(e){
+    resp={ok:false,error:'サーバーに接続できませんでした。iMacが起動しているか確認してください'};
+  }
+  if(!resp.ok){
+    Sheet.close();
+    toast(resp.error||'解析できませんでした');
+    return;
+  }
+  mealForm(null,{name:resp.name,kcal:resp.kcal,p:resp.p,f:resp.f,c:resp.c,note:resp.note});
 }
 function mealSlotSel(s){
   MEAL_SLOT=s;
@@ -2474,6 +2536,21 @@ function mealDel(id){
 /* ---- からだの情報 ---- */
 function openBody(){Sheet.open(bodyHTML())}
 function bodySet(k,v){CF[k]=v;saveCF();sheetSwap(bodyHTML());render()}
+function bodySetPFC(p,f){CF.pgkg=p;CF.fpct=f;saveCF();sheetSwap(bodyHTML());render();toast('おすすめのPFCにしました')}
+
+/* 目標に合わせたおすすめのPFC。
+   減らす時期ほどタンパク質を多めにするのは、カロリーが足りない状態では
+   体が筋肉も分解してしまうから。増やす時期は、トレーニングを支える炭水化物に
+   カロリーを回したいので、タンパク質は控えめでも足ります。
+   脂質はどの目標でも25%。20%を切るとホルモンに響き、30%を超えると炭水化物が足りなくなりがちです */
+function pfcRecommend(){
+  const plan=+CF.plan||0;
+  if(plan<=-15)return{p:2.2,f:25,why:'大きく減らす時期は、筋肉を守るためタンパク質を多めにします'};
+  if(plan<0)   return{p:2.0,f:25,why:'ゆるやかに減らす時期の、標準的な配分です'};
+  if(plan>0)   return{p:1.8,f:25,why:'増やす時期は炭水化物にカロリーを回したいので、少し控えめにします'};
+  return{p:2.0,f:25,why:'維持の時期の、標準的な配分です'};
+}
+const planLabel=()=>{const x=PLANS.find(([v])=>v===(+CF.plan||0));return x?x[1]:'維持'};
 function bodyNum(k,el){
   const v=String(el.value).replace(/[^\d.]/g,'');
   if(v!==el.value)el.value=v;
@@ -2488,6 +2565,7 @@ function bodyNum(k,el){
 }
 function bodyHTML(){
   const kg=bodyKg(),fat=bodyFat(),b=bmrInfo(),t=tdee(todayStr()),mt=macroTarget(todayStr());
+  const rec=pfcRecommend(),isRec=(+CF.pgkg===rec.p&&+CF.fpct===rec.f);
   const opt=(on,title,note,onclick)=>`<button class="opt${on?' on':''}" onclick="${onclick}">
     <b>${title}</b>${note?`<span>${note}</span>`:''}</button>`;
   let h=`<h3>からだの情報</h3>
@@ -2528,6 +2606,9 @@ function bodyHTML(){
 
   <h2 class="sec">目標</h2>
   <div class="card">
+    <div class="sub" style="font-size:11.5px;margin-bottom:9px">
+      迷ったら「ゆっくり減量」か「維持」から。下に出る「1週間で約◯kg」を見て、続けられそうなペースを選んでください。
+      −20%は体感がきついので、短い期間だけにしてください。</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
       ${PLANS.map(([v,l])=>`<button class="opt${+CF.plan===v?' on':''}" style="margin:0;padding:11px 12px"
         onclick="bodySet('plan',${v})"><b style="font-size:14px">${l}</b>
@@ -2545,14 +2626,26 @@ function bodyHTML(){
 
   <h2 class="sec">PFCの決め方</h2>
   <div class="card">
-    <div class="sub" style="font-size:12px;margin-bottom:7px">タンパク質（体重1kgあたり）</div>
-    <div class="seg" style="margin-bottom:11px">${[1.6,1.8,2.0,2.2,2.4].map(v=>
-      `<button class="${+CF.pgkg===v?'on':''}" onclick="bodySet('pgkg',${v})">${v}g</button>`).join('')}</div>
-    <div class="sub" style="font-size:12px;margin-bottom:7px">脂質（カロリーに対する割合）</div>
+    <div class="row" style="margin-bottom:7px">
+      <span class="sub grow" style="font-size:12px">タンパク質（体重1kgあたり）</span>
+      <span class="tag a">おすすめ ${rec.p}g</span></div>
+    <div class="seg" style="margin-bottom:12px">${[1.6,1.8,2.0,2.2,2.4].map(v=>
+      `<button class="${+CF.pgkg===v?'on':''}${v===rec.p?' rec':''}" onclick="bodySet('pgkg',${v})">${v}g</button>`).join('')}</div>
+    <div class="row" style="margin-bottom:7px">
+      <span class="sub grow" style="font-size:12px">脂質（カロリーに対する割合）</span>
+      <span class="tag a">おすすめ ${rec.f}%</span></div>
     <div class="seg">${[20,25,30].map(v=>
-      `<button class="${+CF.fpct===v?'on':''}" onclick="bodySet('fpct',${v})">${v}%</button>`).join('')}</div>
+      `<button class="${+CF.fpct===v?'on':''}${v===rec.f?' rec':''}" onclick="bodySet('fpct',${v})">${v}%</button>`).join('')}</div>
+    ${isRec?`<div class="sub" style="font-size:11.5px;margin-top:11px;color:var(--ok)">
+        ✓ いまはおすすめの組み合わせです</div>`
+      :`<button class="btn ghost sm" style="width:100%;margin-top:11px" onclick="bodySetPFC(${rec.p},${rec.f})">
+        おすすめ（P ${rec.p}g・F ${rec.f}%）にする</button>`}
     <div class="sub" style="font-size:11.5px;margin-top:10px">
-      筋トレをしているなら体重×1.6〜2.2gが目安です。脂質は減らしすぎるとホルモンに響くので、体重×0.6gを下限にしています。
+      いまの目標「${esc(planLabel())}」なら <b style="color:var(--fg)">P ${rec.p}g・F ${rec.f}%</b>。${esc(rec.why)}。<br>
+      目標を変えるとおすすめも変わります。迷ったらこのままで大丈夫です。
+    </div>
+    <div class="sub" style="font-size:11.5px;margin-top:9px;border-top:1px solid var(--line);padding-top:9px">
+      筋トレをしているなら、タンパク質は体重×1.6〜2.2gが目安です。脂質は減らしすぎるとホルモンに響くので、体重×0.6gを下限にしています。
       炭水化物は、残りのカロリーぶんが自動で決まります。</div>
   </div>`;
 
@@ -3238,7 +3331,7 @@ function showHelp(){
 /* ================= 更新 =================
    ホーム画面から開くとSafariの再読み込みボタンが無いので、設定タブから明示的に更新できるようにする。
    キャッシュを消して読み直すだけなので、localStorageの記録には触れません */
-const APP_V='v3.23';
+const APP_V='v3.24';
 let UPDATE_READY=false;
 
 async function updateApp(){
@@ -3408,6 +3501,32 @@ async function inboxPull(){
     fetch('inbox-done',{method:'POST'}).catch(()=>{});  /* 中身を処理したら必ず消してもらう */
   }catch(e){/* iMacが寝ている等。次に開いたときにまた試す */}
 }
+
+/* ============ 引っぱって更新 ============
+   ホーム画面から開くとSafariの再読み込みボタンが無い。設定タブの「アプリの更新」まで
+   行かなくても、画面のいちばん上で下に引っぱれば読み直せるようにする。
+   sw.js が network-first なので、reload するだけで新しい版が入る。
+   記録には触れない。シート（種目選択など）を開いている間は誤発動しないよう無効 */
+const PTR={y0:null,armed:false};
+document.addEventListener('touchstart',e=>{
+  PTR.armed=false;
+  PTR.y0=(window.scrollY===0&&!Sheet.isOpen())?e.touches[0].clientY:null;
+},{passive:true});
+document.addEventListener('touchmove',e=>{
+  if(PTR.y0==null||PTR.armed)return;
+  if(window.scrollY>0){PTR.y0=null;return}          /* 途中でスクロールが始まったら中止 */
+  if(e.touches[0].clientY-PTR.y0>90){
+    PTR.armed=true;
+    toast('離すと更新します 🔄');
+  }
+},{passive:true});
+document.addEventListener('touchend',()=>{
+  const go=PTR.armed;PTR.y0=null;PTR.armed=false;
+  if(!go)return;
+  toast('更新しています…');
+  autoBackup(true);                                  /* 念のため直前の状態を保存してから */
+  setTimeout(()=>location.reload(),150);
+});
 
 /* ================= boot ================= */
 /* 公開版(github.io)は予備のアドレス。同じアプリに見えて記録は別々に貯まるので、

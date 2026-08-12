@@ -8,3 +8,4 @@ tools/vapid.pem
 backups/
 tools/inbox.json
 CLAUDE.md
+tools/anthropic-key.txt
