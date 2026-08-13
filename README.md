@@ -450,15 +450,13 @@ PとFの選択肢には、**いま選んでいる目標に合わせたおすす�
 
 #### 初回セットアップ（1回だけ）
 
-1. [console.anthropic.com](https://console.anthropic.com/) でAPIキーを作る（`sk-ant-...` で始まる文字列）
-2. iMacで次を実行して貼り付ける:
+1. [console.anthropic.com](https://console.anthropic.com/) でAPIキーを作ってコピー（`sk-ant-...` で始まる文字列。
+   初回は Billing で $5 など最小額のチャージも必要です）
+2. **`キー設定.command` をダブルクリック**して、キーを貼り付ける（コピーしたままEnterでもOK）
 
-```
-pbpaste > ~/kasane/tools/anthropic-key.txt   # キーをコピーした状態で
-chmod 600 ~/kasane/tools/anthropic-key.txt
-```
-
-キーのファイルは `.gitignore` 済みで、gitには上がりません。サーバーの再起動は不要です（リクエストごとに読み直します）。
+保存したあと、その場でAPIに接続して**本当に使えるかを確認**し、「キーが違う」「クレジット未購入」「ネット未接続」を
+日本語で切り分けて表示します（`tools/check-key.py`）。キーのファイル（`tools/anthropic-key.txt`）は `.gitignore` 済みで
+gitには上がりません。サーバーの再起動は不要です（リクエストごとに読み直します）。
 
 APIの呼び出しは `tools/server.py` の `/analyze` にあり、他のtoolsと同じく**標準ライブラリのみ**（SDK不使用）で書いています。
 返答はJSONスキーマ（structured outputs）で縛っているので、パース失敗がありません。
