@@ -93,8 +93,10 @@ def analyze_photo(image_b64, media_type):
     """
     key = anthropic_key()
     if not key:
+        # 追加課金が嫌とのことで、この機能はカギを置かない＝休止が既定（2026-08-13決定）。
+        # 代わりの写真入力（無料）はチャットのクロコに送る運用
         return 503, {'ok': False, 'code': 'no_key',
-                     'error': 'APIキーが設定されていません。iMacの tools/anthropic-key.txt にキーを保存してください（READMEの「写真から入力」参照）'}
+                     'error': 'この機能は追加料金がかかるためお休み中です。写真はチャットのクロコに送ってください（いつも通り入れておきます）'}
     body = json.dumps({
         'model': MODEL,
         'max_tokens': 4000,   # 考える途中のぶんも含む上限。回答自体は短い
