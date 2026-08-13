@@ -285,9 +285,9 @@ h2.sec{font-size:13px;color:var(--sub);margin:20px 2px 9px;font-weight:600;lette
 
 <!-- ?v= はキャッシュ対策。ブラウザは同じURLだと古いファイルを使い続けるので、
      data.js / figures.js / foods.js を直したら、下の APP_V と一緒にこの数字も上げること -->
-<script src="figures.js?v=3.24"></script>
-<script src="data.js?v=3.24"></script>
-<script src="foods.js?v=3.24"></script>
+<script src="figures.js?v=3.25"></script>
+<script src="data.js?v=3.25"></script>
+<script src="foods.js?v=3.25"></script>
 <script>
 /* ================= storage ================= */
 const K={ex:'kintore.exercises',wo:'kintore.workouts',cf:'kintore.config',wt:'kintore.weights',
@@ -3331,7 +3331,7 @@ function showHelp(){
 /* ================= 更新 =================
    ホーム画面から開くとSafariの再読み込みボタンが無いので、設定タブから明示的に更新できるようにする。
    キャッシュを消して読み直すだけなので、localStorageの記録には触れません */
-const APP_V='v3.24';
+const APP_V='v3.25';
 let UPDATE_READY=false;
 
 async function updateApp(){
