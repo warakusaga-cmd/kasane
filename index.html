@@ -285,9 +285,9 @@ h2.sec{font-size:13px;color:var(--sub);margin:20px 2px 9px;font-weight:600;lette
 
 <!-- ?v= はキャッシュ対策。ブラウザは同じURLだと古いファイルを使い続けるので、
      data.js / figures.js / foods.js を直したら、下の APP_V と一緒にこの数字も上げること -->
-<script src="figures.js?v=3.25"></script>
-<script src="data.js?v=3.25"></script>
-<script src="foods.js?v=3.25"></script>
+<script src="figures.js?v=3.26"></script>
+<script src="data.js?v=3.26"></script>
+<script src="foods.js?v=3.26"></script>
 <script>
 /* ================= storage ================= */
 const K={ex:'kintore.exercises',wo:'kintore.workouts',cf:'kintore.config',wt:'kintore.weights',
@@ -325,13 +325,15 @@ const SEED=[
   /* スミスマシン（バーがレールで固定されている台。1人でも追い込みやすい） */
   ['スミスマシンベンチプレス','胸'],['スミスマシンインクラインプレス','胸'],
   ['スミスマシンショルダープレス','肩'],['スミスマシンベントオーバーロー','背中'],
+  /* プレートを自分で挿すタイプ。左右が独立して動くので、ピン式のチェストプレスとは別種目として記録する */
+  ['ハンマーストレングス インクラインプレス','胸'],
   ['スミスマシンスクワット','脚'],['スミスマシンヒップスラスト','脚'],['スミスマシンカーフレイズ','脚'],
 ];
 
 /* SEEDを増やしたらここを上げる。既存ユーザーには不足分だけが追加されます。
    追加のみ・削除はしないので、記録が消えることはありません。
    自分で削除した種目は、次にこの番号を上げるまで復活しません */
-const SEED_V=9;   /* 登山を追加（バドミントンは8で追加済み） */
+const SEED_V=10;  /* ハンマーストレングス インクラインプレスを追加 */
 const mkEx=s=>({id:uid(),name:s[0],part:s[1],unit:s[2]||'kg'});
 
 let EX=load(K.ex,null);
@@ -3331,7 +3333,7 @@ function showHelp(){
 /* ================= 更新 =================
    ホーム画面から開くとSafariの再読み込みボタンが無いので、設定タブから明示的に更新できるようにする。
    キャッシュを消して読み直すだけなので、localStorageの記録には触れません */
-const APP_V='v3.25';
+const APP_V='v3.26';
 let UPDATE_READY=false;
 
 async function updateApp(){
