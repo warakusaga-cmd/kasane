@@ -285,9 +285,9 @@ h2.sec{font-size:13px;color:var(--sub);margin:20px 2px 9px;font-weight:600;lette
 
 <!-- ?v= はキャッシュ対策。ブラウザは同じURLだと古いファイルを使い続けるので、
      data.js / figures.js / foods.js を直したら、下の APP_V と一緒にこの数字も上げること -->
-<script src="figures.js?v=3.26"></script>
-<script src="data.js?v=3.26"></script>
-<script src="foods.js?v=3.26"></script>
+<script src="figures.js?v=3.27"></script>
+<script src="data.js?v=3.27"></script>
+<script src="foods.js?v=3.27"></script>
 <script>
 /* ================= storage ================= */
 const K={ex:'kintore.exercises',wo:'kintore.workouts',cf:'kintore.config',wt:'kintore.weights',
@@ -915,6 +915,50 @@ function figSVG(key){
 /* ジムでの表示名・別の呼び方。data.js の ALIAS に無ければ空 */
 const aliasOf=name=>(typeof ALIAS!=='undefined'&&ALIAS[name])||[];
 
+/* ============ 代わりの種目 ============
+   器具が使われていて出来ないとき用。data.js の ALT に載っていればその順番で、
+   無ければ同じ部位の他の種目を出す。ジムに無い器具（NO_EQUIP）は出さない */
+function altsOf(name){
+  const ng=(typeof NO_EQUIP!=='undefined'?NO_EQUIP:[]);
+  const listed=(typeof ALT!=='undefined'&&ALT[name])||[];
+  const out=listed.filter(([n])=>!ng.includes(n)&&exByName(n));
+  if(out.length)return out;
+  const ex=exByName(name);
+  if(!ex)return [];
+  /* 載っていない種目は同じ部位から。よく使う順（SEEDの並び順）で最大6つ */
+  return EX.filter(e=>e.part===ex.part&&e.name!==name&&!ng.includes(e.name))
+           .slice(0,6).map(e=>[e.name,'同じ '+e.part+' の種目']);
+}
+function showAlts(name){
+  const alts=altsOf(name);
+  if(!alts.length){toast('代わりの種目が見つかりませんでした');return}
+  const w=getWorkout(VIEW_DATE), cur=exByName(name);
+  /* まだ1セットも記録していない種目なら、入れ替え（元を消して代役を入れる）を出す */
+  const en=w&&cur&&w.entries.find(e=>e.exerciseId===cur.id);
+  const canSwap=!!en&&!en.sets.some(s=>s.done);
+  let h=`<h3>${esc(name)}の代わり</h3>
+    <div class="sub" style="margin-bottom:11px">上にあるものほど動きが近い種目です。</div>`;
+  for(const [n,why] of alts){
+    const e=exByName(n);
+    const used=w&&w.entries.some(x=>x.exerciseId===e.id);
+    h+=`<div class="pickitem">
+      <div class="grow" style="min-width:0"><div class="trunc">${esc(n)}</div>
+        <div class="sub" style="font-size:11.5px">${esc(why)}</div></div>
+      <button class="howto" onclick="showGuide('${esc(n)}')">やり方</button>
+      <button class="btn sm" onclick="${canSwap?`swapEntry('${esc(name)}','${esc(n)}')`:`addEntry('${e.id}')`}"
+        ${used?'disabled style="opacity:.35"':''}>${used?'追加済み':canSwap?'これにする':'追加'}</button></div>`;
+  }
+  Sheet.open(h);
+}
+/* 元の種目を消して代役を入れる。記録済みのセットがあるときは呼ばれない */
+function swapEntry(from,to){
+  const w=getWorkout(VIEW_DATE,true), a=exByName(from), b=exByName(to);
+  if(!a||!b)return;
+  w.entries=w.entries.filter(e=>e.exerciseId!==a.id);
+  saveWO();
+  addEntry(b.id);            /* addEntry の中で保存・シートを閉じる・再描画まで行う */
+  toast(`${esc(to)} に変更しました`);
+}
 function showGuide(name){
   const g=GUIDE[name],ex=exByName(name);
   const yt=`https://www.youtube.com/results?search_query=${encodeURIComponent(name+' フォーム 解説')}`;
@@ -1334,6 +1378,7 @@ function viewLog(){
             <div class="rep">${it.minutes?`${it.minutes}分`:`${it.sets}セット × ${esc(it.rep)}`}
               ${cut?'<span style="color:var(--warn)">（短縮）</span>':up?'<span style="color:var(--ok)">（増量）</span>':''}</div>
             <div class="rep" style="opacity:.65">${esc(it.note)}</div></div>
+          <button class="howto" onclick="showAlts('${esc(it.name)}')">代わり</button>
           <button class="howto" onclick="showGuide('${esc(it.name)}')">やり方</button>
           ${ex?`<button class="btn sm ghost" onclick="addEntry('${ex.id}')">＋</button>`:''}
         </div>`;
@@ -1353,6 +1398,7 @@ function viewLog(){
         <div class="row">
           <div class="exname grow trunc">${esc(ex.name)}</div>
           ${en.target?`<span class="tag a">${esc(en.target)}</span>`:''}
+          <button class="howto" onclick="showAlts('${esc(ex.name)}')">代わり</button>
           <button class="howto" onclick="showGuide('${esc(ex.name)}')">やり方</button>
           <button class="del sub" onclick="rmEntry('${en.exerciseId}')" style="font-size:18px;color:var(--sub)">×</button>
         </div>`;
@@ -3333,7 +3379,7 @@ function showHelp(){
 /* ================= 更新 =================
    ホーム画面から開くとSafariの再読み込みボタンが無いので、設定タブから明示的に更新できるようにする。
    キャッシュを消して読み直すだけなので、localStorageの記録には触れません */
-const APP_V='v3.26';
+const APP_V='v3.27';
 let UPDATE_READY=false;
 
 async function updateApp(){

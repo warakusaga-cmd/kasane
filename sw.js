@@ -1,4 +1,4 @@
-const CACHE = 'kasane-v53';
+const CACHE = 'kasane-v54';
 const ASSETS = ['./', './index.html', './figures.js', './data.js', './foods.js',
                 './manifest.json', './icon.png', './icon-192.png',
                 './apple-touch-icon.png'];
