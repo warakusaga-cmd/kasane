@@ -285,9 +285,9 @@ h2.sec{font-size:13px;color:var(--sub);margin:20px 2px 9px;font-weight:600;lette
 
 <!-- ?v= はキャッシュ対策。ブラウザは同じURLだと古いファイルを使い続けるので、
      data.js / figures.js / foods.js を直したら、下の APP_V と一緒にこの数字も上げること -->
-<script src="figures.js?v=3.28"></script>
-<script src="data.js?v=3.28"></script>
-<script src="foods.js?v=3.28"></script>
+<script src="figures.js?v=3.29"></script>
+<script src="data.js?v=3.29"></script>
+<script src="foods.js?v=3.29"></script>
 <script>
 /* ================= storage ================= */
 const K={ex:'kintore.exercises',wo:'kintore.workouts',cf:'kintore.config',wt:'kintore.weights',
@@ -728,11 +728,16 @@ const Timer={
   start(sec){this.end=Date.now()+sec*1000;this.onEnd=null;const el=document.getElementById('timer');
     el.classList.add('on');el.classList.remove('fin');
     ALARM.unlock();keepAwake(true);
+    ALARM.armAt(sec);          /* タップした今のうちに、終了時の音まで予約しておく */
     clearInterval(this.iv);this.iv=setInterval(()=>this.tick(),250);this.tick()},
-  add(s){if(!this.iv)return;this.end+=s*1000;this.tick()},
+  add(s){if(!this.iv)return;this.end+=s*1000;
+    ALARM.armAt(Math.max(0,(this.end-Date.now())/1000));   /* ±15秒したら鳴る時刻も取り直す */
+    this.tick()},
   tick(){let r=Math.round((this.end-Date.now())/1000);const el=document.getElementById('timer');
     if(r<=0){r=0;el.classList.add('fin');
-      if(!this.buzzed){this.buzzed=1;navigator.vibrate&&navigator.vibrate([180,90,180]);beep();
+      /* 音は開始時に予約済み。予約が生きていなければ（別タブ復帰など）ここで鳴らす */
+      if(!this.buzzed){this.buzzed=1;navigator.vibrate&&navigator.vibrate([180,90,180]);
+        if(!ALARM.armed&&!ALARM.ringing)beep();
         if(this.onEnd){const f=this.onEnd;this.onEnd=null;setTimeout(f,60)}}}
     else this.buzzed=0;
     document.getElementById('timerT').textContent=`${Math.floor(r/60)}:${String(r%60).padStart(2,'0')}`;
@@ -767,7 +772,7 @@ function startSetTimer(exId,i){
      最初のタップで AudioContext を起こしておく（unlock）
    ・鳴っている間に画面のどこかを触れば止まる */
 const ALARM={
-  _ac:null,master:null,ringing:false,stopT:null,vibT:null,
+  _ac:null,master:null,ringing:false,armed:false,stopT:null,fireT:null,vibT:null,
   /* 何秒鳴らすか。off=鳴らさない。
      旧設定「1回(short)」は廃止した（短くて気づけない、が作り直しの理由だったため）。
      選んでいた人は6秒に読み替える */
@@ -785,13 +790,25 @@ const ALARM={
 
   /* 「ピッ ピッ ピッ …」（0.9秒周期）を secs 秒ぶん先までまとめて予約する。
      スマホのスピーカーは1〜3kHzがいちばんよく鳴るので、その帯域＋倍音 */
-  play(sec){
+  play(sec){this.armAt(0,sec)},
+
+  /* wait秒後に鳴るよう、いま予約する。
+     インターバル中にiOSが音の回路を眠らせてしまい、いざ鳴らす時には
+     「予約した時刻がもう過ぎている」状態になって無音になっていた（2026-08-17修正）。
+     ✓を押した瞬間＝音を出す権利がある間に、90秒先の音まで予約してしまう。 */
+  armAt(wait,sec){
     const secs=sec!=null?sec:this.SECS[this.level()];
     if(!secs)return;
     this.stop();
     const c=this.ctx();if(!c)return;
+    const go=()=>this._ring(c,Math.max(.03,wait),secs);
+    /* 眠っていたら起こしてから。起きるのを待たずに予約すると鳴らない */
+    if(c.state==='suspended')c.resume().then(go).catch(()=>{});
+    else go();
+  },
+  _ring(c,wait,secs){
     const g=c.createGain();g.connect(c.destination);
-    this.master=g;
+    this.master=g;this.armed=true;
     const beep=(t,f)=>{
       for(const[m,amp]of[[1,.5],[2,.22],[3,.09]]){
         const o=c.createOscillator(),og=c.createGain();
@@ -803,18 +820,23 @@ const ALARM={
         o.start(t);o.stop(t+.16);
       }
     };
-    const t0=c.currentTime+.03;
+    const t0=c.currentTime+wait;
     for(let i=0;i<Math.ceil(secs/.9);i++){
       const t=t0+i*.9;
       beep(t,1175);beep(t+.17,1568);beep(t+.34,1175);
     }
-    this.ringing=true;
-    if(navigator.vibrate){navigator.vibrate([250,120,250]);
-      this.vibT=setInterval(()=>navigator.vibrate([250,120,250]),900)}
-    this.stopT=setTimeout(()=>this.stop(),secs*1000+150);
+    /* 鳴り始めるまでは ringing=false のまま。
+       インターバル中の画面タップで消えてしまわないようにするため */
+    this.fireT=setTimeout(()=>{
+      this.ringing=true;
+      if(navigator.vibrate){navigator.vibrate([250,120,250]);
+        this.vibT=setInterval(()=>navigator.vibrate([250,120,250]),900)}
+    },wait*1000);
+    this.stopT=setTimeout(()=>this.stop(),(wait+secs)*1000+150);
   },
   stop(){
-    clearTimeout(this.stopT);clearInterval(this.vibT);this.stopT=this.vibT=null;
+    clearTimeout(this.stopT);clearTimeout(this.fireT);clearInterval(this.vibT);
+    this.stopT=this.fireT=this.vibT=null;this.armed=false;
     /* 予約済みの音はマスターの線を抜いてまとめて黙らせる */
     if(this.master){try{this.master.disconnect()}catch(e){}this.master=null}
     if(this.ringing&&navigator.vibrate)navigator.vibrate(0);
@@ -848,7 +870,13 @@ async function keepAwake(on){
 }
 /* 画面を戻したときに取り直す（iOSはバックグラウンドで解除される） */
 document.addEventListener('visibilitychange',()=>{
-  if(document.visibilityState==='visible'&&Timer.iv)keepAwake(true);
+  if(document.visibilityState==='visible'&&Timer.iv){
+    keepAwake(true);
+    /* 戻ってきたら音の回路も起こし、まだ先なら予約を取り直す（眠っている間に消えるため） */
+    ALARM.ctx();
+    const left=(Timer.end-Date.now())/1000;
+    if(left>0.5)ALARM.armAt(left);
+  }
 });
 
 /* シートの開閉。
@@ -3379,7 +3407,7 @@ function showHelp(){
 /* ================= 更新 =================
    ホーム画面から開くとSafariの再読み込みボタンが無いので、設定タブから明示的に更新できるようにする。
    キャッシュを消して読み直すだけなので、localStorageの記録には触れません */
-const APP_V='v3.28';
+const APP_V='v3.29';
 let UPDATE_READY=false;
 
 async function updateApp(){
