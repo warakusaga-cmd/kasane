@@ -285,9 +285,9 @@ h2.sec{font-size:13px;color:var(--sub);margin:20px 2px 9px;font-weight:600;lette
 
 <!-- ?v= はキャッシュ対策。ブラウザは同じURLだと古いファイルを使い続けるので、
      data.js / figures.js / foods.js を直したら、下の APP_V と一緒にこの数字も上げること -->
-<script src="figures.js?v=3.29"></script>
-<script src="data.js?v=3.29"></script>
-<script src="foods.js?v=3.29"></script>
+<script src="figures.js?v=3.30"></script>
+<script src="data.js?v=3.30"></script>
+<script src="foods.js?v=3.30"></script>
 <script>
 /* ================= storage ================= */
 const K={ex:'kintore.exercises',wo:'kintore.workouts',cf:'kintore.config',wt:'kintore.weights',
@@ -309,7 +309,7 @@ const SEED=[
   ['レッグカール','脚'],['ランジ','脚'],['ブルガリアンスクワット','脚'],['ヒップスラスト','脚'],
   ['カーフレイズ','脚'],['ケーブルプルスルー','脚'],['ケーブルキックバック','脚'],['ヒップアブダクション','脚'],
   ['ショルダープレス','肩'],['アーノルドプレス','肩'],['サイドレイズ','肩'],['フロントレイズ','肩'],
-  ['リアレイズ','肩'],['フェイスプル','肩'],['アップライトロー','肩'],
+  ['リアレイズ','肩'],['フェイスプル','肩'],['アップライトロー','肩'],['リアデルトマシン','肩'],
   ['ケーブルサイドレイズ','肩'],['ケーブルリアデルトフライ','肩'],
   ['アームカール','腕'],['ハンマーカール','腕'],['プリーチャーカール','腕'],
   ['トライセプスエクステンション','腕'],['ケーブルプレスダウン','腕'],['ナローベンチプレス','腕'],
@@ -333,7 +333,7 @@ const SEED=[
 /* SEEDを増やしたらここを上げる。既存ユーザーには不足分だけが追加されます。
    追加のみ・削除はしないので、記録が消えることはありません。
    自分で削除した種目は、次にこの番号を上げるまで復活しません */
-const SEED_V=11;  /* ハンマーストレングス D.Y.ローを追加（10でインクラインプレス） */
+const SEED_V=12;  /* リアデルトマシンを追加（11でD.Y.ロー） */
 const mkEx=s=>({id:uid(),name:s[0],part:s[1],unit:s[2]||'kg'});
 
 let EX=load(K.ex,null);
@@ -3407,7 +3407,7 @@ function showHelp(){
 /* ================= 更新 =================
    ホーム画面から開くとSafariの再読み込みボタンが無いので、設定タブから明示的に更新できるようにする。
    キャッシュを消して読み直すだけなので、localStorageの記録には触れません */
-const APP_V='v3.29';
+const APP_V='v3.30';
 let UPDATE_READY=false;
 
 async function updateApp(){
